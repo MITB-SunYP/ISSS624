@@ -9,7 +9,11 @@ In this hands-on exercise, I learn how to import and wrangling geospatial data u
 
 ## Getting Started
 
-The code chunk below install and load sf and tidyverse packages into R environment.
+Firstly, we need to install the required R packages.
+
+-   **sf**: importing, managing and processing geospatial data
+
+-   **tidyverse**: importing, wrangling and visualizing data. It consists of a family of R packages, including **readr**, **readxl**, **tidyr**, **dplyr** and **ggplot2**.
 
 ```{r}
 pacman::p_load(sf, tidyverse)
@@ -20,8 +24,86 @@ pacman::p_load(sf, tidyverse)
 
 ### Importing polygon feature data
 
+The following codes import *MP14_SUBZONE_WEB_PL* shapfile into R as a polygon feature data frame.
+
 ```{r}
 mpsz <- st_read(dsn = "data/geospatial",
                 layer = "MP14_SUBZONE_WEB_PL")
+
+```
+
+*mpsz* is in **svy21** projected coordinates systems.
+
+### Importing polyline feature data
+
+The following codes import *CyclingPath* shapfile into R as line feature data frame.
+
+```{r}
+cyclingpath = st_read(dsn = "data/geospatial",
+                      layer = "CyclingPath")
+
+```
+
+*cyclingpath* is in **svy21** projected coordinates systems.
+
+### Importing GIS data in kml format
+
+The following code chunk imports *pre-schools-location-kml* kml file into R as a point feature data frame.
+
+```{r}
+preschool = st_read("data/geospatial/pre-schools-location-kml.kml")
+
+```
+
+*preschool* is in **wgs84** coordinates systems.
+
+## Checking The Content of A Simple Feature Data Frame
+
+### Getting geometry from a sf dataframe
+
+The following code chunk gets the geometries from *mpsz* polygon feature dataframe.
+
+```{r}
+st_geometry(mpsz)
+
+```
+
+### Getting attribute information in a sf dataframe
+
+The following code chunk gets the attribute information from *mpsz* dataframe.
+
+```{r}
+glimpse(mpsz)
+
+```
+
+### Revealing complete information of a feature object
+
+The following code chunk displays the top 5 objects from *mpsz* dataframe.
+
+```{r}
+head(mpsz, n=5)
+
+```
+
+## Plotting the geospatial data
+
+The following code chunk plots the geospatial features. The default plot is a multi-plot of all attributes.
+
+```{r}
+plot(mpsz)
+
+```
+
+The following code chunk only plots the geometry.
+
+```{r}
+plot(st_geometry(mpsz))
+```
+
+The following code chunk only plots the specified attribute.
+
+```{r}
+plot(mpsz["PLN_AREA_N"])
 
 ```
