@@ -2,3 +2,143 @@
 title: "Hands-on Exercise 2: Global and Local Measures of Spatial Autocorrelation"
 editor: visual
 ---
+
+## Overview
+
+In this in-class exercise, I learned how to compute Global and Local Measure of Spatial Autocorrelation (GLSA) using R.
+
+## Getting Started
+
+Firstly, we need to install the required R packages.
+
+-   **sf**: importing, managing and processing geospatial data.
+
+-   **spdep**: computing spatial weights and spatially lagged variables.
+
+-   **tmap**: plotting Thematic Maps
+
+-   **tidyverse**: importing, wrangling and visualizing data. It consists of a family of R packages, including **readr**, **readxl**, **tidyr**, **dplyr** and **ggplot2**.
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse)
+
+```
+
+## Importing Required Data
+
+### Importing polygon feature data
+
+The following codes import *Hunan* shapfile into R as a polygon feature data frame.
+
+```{r}
+hunan <- st_read(dsn = "data/geospatial",
+                 layer = "Hunan")
+
+```
+
+### Importing the aspatial data
+
+The following code chunk imports *Hunan_2012* data set into R as a dataframe.
+
+```{r}
+hunan2012 <- read_csv("data/aspatial/Hunan_2012.csv")
+
+```
+
+### Performing relational join
+
+The code chunk below joins the two dataframes, adding the attributes in *hunan2012* dataframes to *hunan* dataframe.
+
+```{r}
+hunan <- left_join(hunan, hunan2012) %>%
+  select(1:4, 7, 15)
+
+```
+
+### Visualizing regional development indicator
+
+```{r}
+equal <- tm_shape(hunan) +
+  tm_fill("GDPPC",
+          n = 5,
+          style = "equal") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "Equal interval classification")
+
+quantile <- tm_shape(hunan) +
+  tm_fill("GDPPC",
+          n = 5,
+          style = "quantile") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "Equal quantile classification")
+
+tmap_arrange(equal, 
+             quantile, 
+             asp = 1, 
+             ncol = 2)
+
+```
+
+## Global Spatial Autocorrelation
+
+### Computing contiguity spatial weights
+
+Calculate spatial weights of the study area. Compute Queen contiguity weight matrix.
+
+```{r}
+wm_q <- poly2nb(hunan, 
+                queen = T)
+summary(wm_q)
+
+```
+
+### Standardizing weight matrix by row
+
+The code chunk below assigns equal weight to each neighboring polygon.
+
+```{r}
+rswm_q <- nb2listw(wm_q, 
+                   style = "W", 
+                   zero.policy = T)
+rswm_q
+
+```
+
+### Global spatial autocorrelation: Moran's I
+
+The code chunk below performs Moran\'s I statistical testing.
+
+```{r}
+moran.test(hunan$GDPPC, 
+           listw = rswm_q, 
+           zero.policy = T, 
+           na.action = na.omit)
+
+```
+
+**Question**: What statistical conclusion can you draw from the output above?
+**Ans**: Since p value is less than 0.05, we have enough evidence to conclude that the GDPPC distribution among different counties are significantly different at 5% significance level.
+
+Permutation test for Moran\'s I statistic using 1000 simulations.
+
+```{r}
+set.seed(1234)
+bperm= moran.mc(hunan$GDPPC, 
+                listw = rswm_q, 
+                nsim = 999, 
+                zero.policy = T, 
+                na.action = na.omit)
+bperm
+
+```
+
+**Question**: What statistical conclusion can you draw from the output above?
+**Ans**: Since p value is less than 0.05, we have enough evidence to conclude that xxx at 5% significance level.
+
+
+
+
+
+
+
+
