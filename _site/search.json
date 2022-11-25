@@ -70,6 +70,13 @@
     "text": "Exploratory Data Analysis (EDA)\nThe following code chunk plots a histogram to reveal the distribution of PreSch Density.\n\nhist(mpsz3414$`PreSch Density`)\n\n\n\n\nA better visualization with ggplot2.\n\nggplot(data=mpsz3414, \n       aes(x= as.numeric(`PreSch Density`)))+\n  geom_histogram(bins=20, \n                 color=\"black\", \n                 fill=\"light blue\") +\n  labs(title = \"Are pre-school even distributed in Singapore?\",\n       subtitle= \"There are many planning sub-zones with a single pre-school, on the other hand, \\nthere are two planning sub-zones with at least 20 pre-schools\",\n      x = \"Pre-school density (per km sq)\",\n      y = \"Frequency\")\n\n\n\n\nScatter plot to show the relationship between Pre-School Density and Pre-School Count.\n\nggplot(data=mpsz3414, \n       aes(y = `PreSch Count`, \n           x= as.numeric(`PreSch Density`)))+\n  geom_point(color=\"black\", \n             fill=\"light blue\") +\n  xlim(0, 40) +\n  ylim(0, 40) +\n  labs(title = \"\",\n      x = \"Pre-school density (per km sq)\",\n      y = \"Pre-school count\")"
   },
   {
+    "objectID": "In-class_Ex1/In-class_Ex1.html#getting-started",
+    "href": "In-class_Ex1/In-class_Ex1.html#getting-started",
+    "title": "In-class Exercise 1: Spatial Weights and Applications",
+    "section": "Getting Started",
+    "text": "Getting Started"
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "ISSS624",
