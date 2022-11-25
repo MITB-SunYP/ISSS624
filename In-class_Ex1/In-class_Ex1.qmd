@@ -70,3 +70,276 @@ gdppc <- qtm(hunan, "GDPPC")
 tmap_arrange(basemap, gdppc, asp = 1, ncol = 2)
 
 ```
+
+## Computing Contiguity Spatial Weights
+
+### Computing (Queen) contiguity based neighbors
+
+The code chunk below computes Queen contiguity weight matrix on *hunan* dataframe.
+
+```{r}
+wm_q <- poly2nb(hunan, queen = T)
+summary(wm_q)
+
+```
+
+Check the neighbors for the 1st polygon in the object.
+
+```{r}
+wm_q[[1]]
+
+```
+
+Get the county name of polygon ID = 1.
+
+```{r}
+hunan$County[1]
+
+```
+
+Get the county names of the 5 neighbors of the 1st polygon in the object.
+
+```{r}
+hunan$NAME_3[wm_q[[1]]]
+
+```
+
+Get the GDPPC of these 5 neighbors.
+
+```{r}
+nb1 <- wm_q[[1]]
+nb1 <- hunan$GDPPC[nb1]
+nb1
+
+```
+
+Display the complete weight matrix.
+
+```{r}
+str(wm_q)
+
+```
+
+### Creating (Rook) contiguity based neighbors
+
+The code chunk below computes Rook contiguity weight matrix.
+
+```{r}
+wm_r <- poly2nb(hunan, queen = F)
+summary(wm_r)
+
+```
+
+### Visualizing contiguity weights
+
+Get the longitude of the counties from *hunan* dataframe.
+
+```{r}
+longitude <- map_dbl(hunan$geometry, ~st_centroid(.x)[[1]])
+
+```
+
+Get the latitude of the counties from *hunan* dataframe.
+
+```{r}
+latitude <- map_dbl(hunan$geometry, ~st_centroid(.x)[[2]])
+
+```
+
+Combine *longitude* and *latitude* into one object.
+
+```{r}
+coords <- cbind(longitude, latitude)
+
+```
+
+Check a few rows to make sure the data is combined correctly.
+
+```{r}
+head(coords)
+
+```
+
+#### Plotting Queen contiguity based neighbors map
+
+```{r}
+plot(hunan$geometry, border = "lightgray")
+plot(wm_q, coords, pch = 19, cex = 0.6, add = T, col = "red")
+
+```
+
+#### Plotting Rook contiguity based neighbors map
+
+```{r}
+plot(hunan$geometry, border = "lightgray")
+plot(wm_r, coords, pch = 19, cex = 0.6, add = T, col = "red")
+
+```
+
+#### Plotting Both Queen and Rook contiguity based neighbors maps
+
+```{r}
+par(mfrow = c(1,2))
+
+plot(hunan$geometry, border = "lightgray")
+plot(wm_q, coords, pch = 19, cex = 0.6, add = T, col = "red")
+
+plot(hunan$geometry, border = "lightgray")
+plot(wm_r, coords, pch = 19, cex = 0.6, add = T, col = "red")
+
+```
+
+## Computing Distanced Based Neighbors
+
+### Determining the cut-off distance
+
+The code chunk below calculates and displays the distribution of distance among all neighbors.
+
+```{r}
+k1 <- knn2nb(knearneigh(coords))
+k1dists <- unlist(nbdists(k1, coords, longlat = T))
+summary(k1dists)
+
+```
+
+The maximum distance could be used as the upper threshold to every county has at least one neighbor.
+
+### Computing fixed distance weight matrix
+
+The code chunk below calculates the distance weight matrix.
+
+```{r}
+wm_d62 <- dnearneigh(coords, 0, 62, longlat = T)
+wm_d62
+
+```
+
+**Quiz**: What is the meaning of "Average number of links: 3.681818" shown above?
+
+**Ans**: Average number of links above shows that each county has 3.68 neighbors within the threshold on average.
+
+Display the content of wm_d62 weight matrix.
+
+```{r}
+str(wm_d62)
+
+```
+
+Another way to display the weight matrix.
+
+```{r}
+table(hunan$County, card(wm_d62))
+
+```
+
+Compute the number of disjoint connected counties.
+
+```{r}
+n_comp <- n.comp.nb(wm_d62)
+n_comp$nc
+
+```
+
+Get the id of the disjoint connected counties.
+
+```{r}
+table(n_comp$comp.id)
+
+```
+
+#### Plotting dixed distance weight matrix
+
+```{r}
+plot(hunan$geometry, border = "lightgray")
+plot(wm_d62, coords, add = T)
+plot(k1, coords, add = T, col = "red", length = 0.08)
+
+```
+
+Plot the two graphs separately.
+
+```{r}
+par(mfrow = c(1,2))
+
+plot(hunan$geometry, border = "lightgray")
+plot(k1, coords, add = T, col = "red", length = 0.08, main = "1st nearest neighbours")
+
+plot(hunan$geometry, border = "lightgray")
+plot(wm_d62, coords, add = T, pch = 19, cex = 0.6, main = "Distance link")
+
+```
+
+### Computing adaptive distance weight matrix
+
+The code chunk below controls the number of neighbors directly using k-nearest neighbors, either accepting asymmetric neighbors or imposing symmetry.
+
+```{r}
+knn6 <- knn2nb(knearneigh(coords, k = 6))
+knn6
+
+```
+
+Display the content of the matrix.
+
+```{r}
+str(knn6)
+
+```
+
+#### Plotting distance based neighbors
+
+```{r}
+plot(hunan$geometry, border = "lightgrey")
+plot(knn6, coords, pch = 19, cex = 0.6, add = T, col = "red")
+
+```
+
+## Weights Based on IDW
+
+The code chunk below derives a spatial weight matrix based on Inversed Distance method.
+
+```{r}
+dist <- nbdists(wm_q, coords, longlat = T)
+ids <- lapply(dist, function(x) 1/(x))
+ids
+
+```
+
+### Row-standardized weights matrix
+
+The code chunk below standardized the weights matrix by row. Style = "W" assigns equal weight to each neighboring polygon.
+
+```{r}
+rswm_q <- nb2listw(wm_q, style="W", zero.policy = T)
+rswm_q
+
+```
+
+Check the weight of the 1st polygon's neighbors.
+
+```{r}
+rswm_q$weights[10]
+
+```
+
+Derive a row standardized distance weight matrix
+
+```{r}
+rswm_ids <- nb2listw(wm_q, glist=ids, style="B", zero.policy=T)
+rswm_ids
+
+```
+
+Display the weights of the neighbors of 1st polygon.
+
+```{r}
+rswm_ids$weights[1]
+
+```
+
+Check the distribution of the weights.
+
+```{r}
+summary(unlist(rswm_ids$weights))
+
+```
