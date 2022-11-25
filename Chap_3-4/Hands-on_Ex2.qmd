@@ -1,0 +1,4 @@
+---
+title: "Hands-on Exercise 2: Global and Local Measures of Spatial Autocorrelation"
+editor: visual
+---
