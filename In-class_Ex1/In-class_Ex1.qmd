@@ -5,4 +5,68 @@ editor: visual
 
 ## Overview
 
+In this in-class exercise, I learned how to compute spatial weights using R.
+
 ## Getting Started
+
+Firstly, we need to install the required R packages.
+
+-   **sf**: importing, managing and processing geospatial data.
+
+-   **spdep**: computing spatial weights and spatially lagged variables.
+
+-   **tmap**: plotting Thematic Maps
+
+-   **tidyverse**: importing, wrangling and visualizing data. It consists of a family of R packages, including **readr**, **readxl**, **tidyr**, **dplyr** and **ggplot2**.
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse)
+
+```
+
+## Importing Required Data
+
+### Importing polygon feature data
+
+The following codes import *Hunan* shapfile into R as a polygon feature data frame.
+
+```{r}
+hunan <- st_read(dsn = "data/geospatial",
+                 layer = "Hunan")
+
+```
+
+### Importing the aspatial data
+
+The following code chunk imports *Hunan_2012* data set into R as a dataframe.
+
+```{r}
+hunan2012 <- read_csv("data/aspatial/Hunan_2012.csv")
+
+```
+
+### Performing relational join
+
+The code chunk below joins the two dataframes, adding the attributes in *hunan2012* dataframes to *hunan* dataframe.
+
+```{r}
+hunan <- left_join(hunan, hunan2012)
+
+```
+
+## Visualizing Weights and Applications
+
+### Visualizing regional development indicator
+
+The code chunk below plots two maps, one base map showing the county boundaries within Hunan province, and the other one is a choropleth map showing the distribution of GDPPC 2012 of the counties.
+
+```{r}
+basemap <- tm_shape(hunan) +
+  tm_polygons() +
+  tm_text("NAME_3", size = 0.5)
+
+gdppc <- qtm(hunan, "GDPPC")
+
+tmap_arrange(basemap, gdppc, asp = 1, ncol = 2)
+
+```

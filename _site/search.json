@@ -70,11 +70,32 @@
     "text": "Exploratory Data Analysis (EDA)\nThe following code chunk plots a histogram to reveal the distribution of PreSch Density.\n\nhist(mpsz3414$`PreSch Density`)\n\n\n\n\nA better visualization with ggplot2.\n\nggplot(data=mpsz3414, \n       aes(x= as.numeric(`PreSch Density`)))+\n  geom_histogram(bins=20, \n                 color=\"black\", \n                 fill=\"light blue\") +\n  labs(title = \"Are pre-school even distributed in Singapore?\",\n       subtitle= \"There are many planning sub-zones with a single pre-school, on the other hand, \\nthere are two planning sub-zones with at least 20 pre-schools\",\n      x = \"Pre-school density (per km sq)\",\n      y = \"Frequency\")\n\n\n\n\nScatter plot to show the relationship between Pre-School Density and Pre-School Count.\n\nggplot(data=mpsz3414, \n       aes(y = `PreSch Count`, \n           x= as.numeric(`PreSch Density`)))+\n  geom_point(color=\"black\", \n             fill=\"light blue\") +\n  xlim(0, 40) +\n  ylim(0, 40) +\n  labs(title = \"\",\n      x = \"Pre-school density (per km sq)\",\n      y = \"Pre-school count\")"
   },
   {
+    "objectID": "In-class_Ex1/In-class_Ex1.html",
+    "href": "In-class_Ex1/In-class_Ex1.html",
+    "title": "In-class Exercise 1: Spatial Weights and Applications",
+    "section": "",
+    "text": "In this in-class exercise, I learned how to compute spatial weights using R."
+  },
+  {
     "objectID": "In-class_Ex1/In-class_Ex1.html#getting-started",
     "href": "In-class_Ex1/In-class_Ex1.html#getting-started",
     "title": "In-class Exercise 1: Spatial Weights and Applications",
     "section": "Getting Started",
-    "text": "Getting Started"
+    "text": "Getting Started\nFirstly, we need to install the required R packages.\n\nsf: importing, managing and processing geospatial data.\nspdep: computing spatial weights and spatially lagged variables.\ntmap: plotting Thematic Maps\ntidyverse: importing, wrangling and visualizing data. It consists of a family of R packages, including readr, readxl, tidyr, dplyr and ggplot2.\n\n\npacman::p_load(sf, spdep, tmap, tidyverse)\n\nInstalling package into 'C:/R/R-4.2.2/library'\n(as 'lib' is unspecified)\n\n\nalso installing the dependency 'spData'\n\n\nWarning: unable to access index for repository http://www.stats.ox.ac.uk/pub/RWin/bin/windows/contrib/4.2:\n  cannot open URL 'http://www.stats.ox.ac.uk/pub/RWin/bin/windows/contrib/4.2/PACKAGES'\n\n\n\n  There is a binary version available but the source version is later:\n       binary source needs_compilation\nspData  2.2.0  2.2.1             FALSE\n\npackage 'spdep' successfully unpacked and MD5 sums checked\n\nThe downloaded binary packages are in\n    C:\\Users\\yipin\\AppData\\Local\\Temp\\RtmpqUpMfX\\downloaded_packages\n\n\ninstalling the source package 'spData'\n\n\nWarning in utils::install.packages(package, ...): installation of package\n'spData' had non-zero exit status\n\n\n\nspdep installed\n\n\nWarning in pacman::p_load(sf, spdep, tmap, tidyverse): Failed to install/load:\nspdep"
+  },
+  {
+    "objectID": "In-class_Ex1/In-class_Ex1.html#importing-required-data",
+    "href": "In-class_Ex1/In-class_Ex1.html#importing-required-data",
+    "title": "In-class Exercise 1: Spatial Weights and Applications",
+    "section": "Importing Required Data",
+    "text": "Importing Required Data\n\nImporting polygon feature data\nThe following codes import Hunan shapfile into R as a polygon feature data frame.\n\nhunan <- st_read(dsn = \"data/geospatial\",\n                 layer = \"Hunan\")\n\nReading layer `Hunan' from data source \n  `D:\\MITB_SunYP\\ISSS624\\In-class_Ex1\\data\\geospatial' using driver `ESRI Shapefile'\nSimple feature collection with 88 features and 7 fields\nGeometry type: POLYGON\nDimension:     XY\nBounding box:  xmin: 108.7831 ymin: 24.6342 xmax: 114.2544 ymax: 30.12812\nGeodetic CRS:  WGS 84\n\n\n\n\nImporting the aspatial data\nThe following code chunk imports Hunan_2012 data set into R as a dataframe.\n\nhunan2012 <- read_csv(\"data/aspatial/Hunan_2012.csv\")\n\nRows: 88 Columns: 29\n── Column specification ────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (2): County, City\ndbl (27): avg_wage, deposite, FAI, Gov_Rev, Gov_Exp, GDP, GDPPC, GIO, Loan, ...\n\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.\n\n\n\n\nPerforming relational join\nThe code chunk below joins the two dataframes, adding the attributes in hunan2012 dataframes to hunan dataframe.\n\nhunan <- left_join(hunan, hunan2012)\n\nJoining, by = \"County\""
+  },
+  {
+    "objectID": "In-class_Ex1/In-class_Ex1.html#visualizing-weights-and-applications",
+    "href": "In-class_Ex1/In-class_Ex1.html#visualizing-weights-and-applications",
+    "title": "In-class Exercise 1: Spatial Weights and Applications",
+    "section": "Visualizing Weights and Applications",
+    "text": "Visualizing Weights and Applications\n\nVisualizing regional development indicator\nThe code chunk below plots two maps, one base map showing the county boundaries within Hunan province, and the other one is a choropleth map showing the distribution of GDPPC 2012 of the counties.\n\nbasemap <- tm_shape(hunan) +\n  tm_polygons() +\n  tm_text(\"NAME_3\", size = 0.5)\n\ngdppc <- qtm(hunan, \"GDPPC\")\n\ntmap_arrange(basemap, gdppc, asp = 1, ncol = 2)"
   },
   {
     "objectID": "index.html",
