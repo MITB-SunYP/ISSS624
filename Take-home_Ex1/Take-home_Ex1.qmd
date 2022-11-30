@@ -42,7 +42,7 @@ First of all, let's load the required R packages into R:
 -   **tidyverse**: importing, wrangling and visualizing data. It consists of a family of R packages, including **readr**, **readxl**, **tidyr**, **dplyr** and **ggplot2**.
 
 ```{r}
-pacman::p_load(sf, spdep, tmap, tidyverse)
+pacman::p_load(sf, spdep, tmap, tidyverse, stringr)
 
 ```
 
@@ -63,11 +63,80 @@ The data set contains 406,566 rows and 70 columns.
 ```{r}
 #| eval: false
 table(wp$`#clean_country_name`)
+
+#| eval: false
 length(table(wp$`#clean_country_name`))
 
 ```
 
 The aspatial data set contains data from 17 countries, and Nigeria consists of 95,008 rows.
+
+Now, let's get the subset of Nigeria.
+
+```{r}
+#| eval: false
+wp <- subset(wp, `#clean_country_name` == "Nigeria")
+
+#| eval: false
+list(wp)
+
+```
+
+The subset now contains only data for Nigeria, and it has 95,008 rows and 70 columns.
+
+As our focus is to study the non-functional water points, we'll need to filter the data set where "#status" starts with "Non-functional".
+
+```{r}
+#| eval: false
+# Extract the first word from #status column
+wp$status_n <- word(wp$`#status`, 1)
+
+#| eval: false
+unique(wp$status_n)
+
+```
+
+```{r}
+#| eval: false
+# Filter the data set where status_n == Non-functional
+wp <- subset(wp, status_n == "Non-functional")
+
+```
+
+The data set now contains only the data for non-functional water points, and it has 32,101 rows and 70 columns.
+
+Now let's save the data set with the selected columns.
+
+```{r}
+#| eval: false
+wp <- wp %>% select(c(`#lat_deg`,
+                `#lon_deg`,
+                `#water_source_category`,
+                `#water_tech_category`,
+                `#install_year`,
+                `#management_clean`,
+                `#subjective_quality`,
+                water_point_population,
+                local_population_1km,
+                crucialness_score
+))
+
+```
+
+```{r}
+#| eval: false
+write_csv(wp, "Data/Water_Point_Nigeria.csv")
+
+```
+
+After reducing the data file size, let's import the data again for analysis.
+
+```{r}
+wp <- read_csv("Data/Water_Point_Nigeria.csv")
+
+```
+
+The data set now contains 32,101 rows and the selected 10 columns.
 
 ## References
 
