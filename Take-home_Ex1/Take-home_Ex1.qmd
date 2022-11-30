@@ -1,0 +1,76 @@
+---
+title: "Take-home Exercise 1: Geospatial Analytics for Social Good"
+editor: visual
+---
+
+## Background
+
+In Singapore, people are used to access clean water any where and any time. The convenience of getting clean water makes some people forget how precious clean water is, can how difficult it is for people living in other countries to use clean water.
+
+Nigeria is one of the countries still facing severe water crisis, and about one third of the children there don't have enough water to meet their daily needs.
+
+In this take-home exercise, we are going to analyze the water point related data in Nigeria to reveal the spatial patterns of Not Functional water points.
+
+## Problem Statement
+
+-   Apply appropriate global and local measures of spatial association techniques on Nigeria data to study the spatial patterns of Not Functional water points.
+
+## Getting Started
+
+### Data sources
+
+-   **Aspatial Data**
+
+A set of a spatial data containing the water point related information is downloaded from [Water Point Data Exchange (WPdx)](https://data.waterpointdata.org/dataset/Water-Point-Data-Exchange-Plus-WPdx-/eqje-vguj/data) website.
+
+The original data set contains the data from 17 countries, and only the subset of Nigeria is used for the analysis in this exercise.
+
+**Geospatial Data**
+
+Nigeria Level-2 Administrative Boundary polygon features GIS data downloaded from [geoBoundaries](https://www.geoboundaries.org/) will be used in this exercise.
+
+### Loading R Packages
+
+First of all, let's load the required R packages into R:
+
+-   **sf**: importing, managing and processing geospatial data.
+
+-   **spdep**: computing spatial weights and spatially lagged variables.
+
+-   **tmap**: plotting Thematic Maps
+
+-   **tidyverse**: importing, wrangling and visualizing data. It consists of a family of R packages, including **readr**, **readxl**, **tidyr**, **dplyr** and **ggplot2**.
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse)
+
+```
+
+### Importing Data
+
+**Aspatial Data**
+
+Let's import the aspatial data containing the water point information.
+
+```{r}
+#| eval: false
+wp <- read_csv("Data/Water_Point_Data_Exchange-Plus_WPdx.csv")
+
+```
+
+The data set contains 406,566 rows and 70 columns.
+
+```{r}
+#| eval: false
+table(wp$`#clean_country_name`)
+length(table(wp$`#clean_country_name`))
+
+```
+
+The aspatial data set contains data from 17 countries, and Nigeria consists of 95,008 rows.
+
+## References
+
+-   UNICEF. (2022, March 22). *Nearly one third of Nigerian children do not have enough water to meet their daily needs - UNICEF.* <https://www.unicef.org/nigeria/press-releases/nearly-one-third-nigerian-children-do-not-have-enough-water-meet-their-daily-needs>
+
+#### 

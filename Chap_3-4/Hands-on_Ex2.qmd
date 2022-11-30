@@ -106,7 +106,7 @@ rswm_q
 
 ### Global spatial autocorrelation: Moran's I
 
-The code chunk below performs Moran\'s I statistical testing.
+The code chunk below performs Moran's I statistical testing.
 
 ```{r}
 moran.test(hunan$GDPPC, 
@@ -116,10 +116,9 @@ moran.test(hunan$GDPPC,
 
 ```
 
-**Question**: What statistical conclusion can you draw from the output above?
-**Ans**: Since p value is less than 0.05, we have enough evidence to conclude that the GDPPC distribution among different counties are significantly different at 5% significance level.
+**Question**: What statistical conclusion can you draw from the output above? **Ans**: Since p value is less than 0.05, we have enough evidence to conclude that the GDPPC distribution among different counties are significantly different at 5% significance level.
 
-Permutation test for Moran\'s I statistic using 1000 simulations.
+Permutation test for Moran's I statistic using 1000 simulations.
 
 ```{r}
 set.seed(1234)
@@ -132,13 +131,4 @@ bperm
 
 ```
 
-**Question**: What statistical conclusion can you draw from the output above?
-**Ans**: Since p value is less than 0.05, we have enough evidence to conclude that xxx at 5% significance level.
-
-
-
-
-
-
-
-
+**Question**: What statistical conclusion can you draw from the output above? **Ans**: Since p value is less than 0.05, we have enough evidence to conclude that xxx at 5% significance level.
