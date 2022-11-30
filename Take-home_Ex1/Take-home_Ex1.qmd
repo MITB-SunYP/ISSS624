@@ -25,7 +25,7 @@ A set of a spatial data containing the water point related information is downlo
 
 The original data set contains the data from 17 countries, and only the subset of Nigeria is used for the analysis in this exercise.
 
-**Geospatial Data**
+-   **Geospatial Data**
 
 Nigeria Level-2 Administrative Boundary polygon features GIS data downloaded from [geoBoundaries](https://www.geoboundaries.org/) will be used in this exercise.
 
