@@ -204,6 +204,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#loading-r-packages" id="toc-loading-r-packages" class="nav-link" data-scroll-target="#loading-r-packages">Loading R Packages</a></li>
   <li><a href="#importing-data" id="toc-importing-data" class="nav-link" data-scroll-target="#importing-data">Importing Data</a></li>
   </ul></li>
+  <li><a href="#extracting-information-about-non-functional-water-points" id="toc-extracting-information-about-non-functional-water-points" class="nav-link" data-scroll-target="#extracting-information-about-non-functional-water-points"><strong>Extracting Information about Non-Functional Water Points</strong></a>
+  <ul class="collapse">
+  <li><a href="#extracting-water-points-from-different-water-sources" id="toc-extracting-water-points-from-different-water-sources" class="nav-link" data-scroll-target="#extracting-water-points-from-different-water-sources">Extracting Water Points from Different Water Sources</a></li>
+  <li><a href="#extracting-water-points-using-different-technologies" id="toc-extracting-water-points-using-different-technologies" class="nav-link" data-scroll-target="#extracting-water-points-using-different-technologies">Extracting Water Points using Different Technologies</a></li>
+  <li><a href="#perform-pointin-polygon-count" id="toc-perform-pointin-polygon-count" class="nav-link" data-scroll-target="#perform-pointin-polygon-count">Perform Point=in-Polygon Count</a></li>
+  <li><a href="#saving-the-analytical-data-table" id="toc-saving-the-analytical-data-table" class="nav-link" data-scroll-target="#saving-the-analytical-data-table">Saving the Analytical Data Table</a></li>
+  </ul></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
   </ul>
 </nav>
@@ -437,10 +444,108 @@ Geodetic CRS:  WGS 84</code></pre>
 </div>
 </div>
 <p>We can see that this geospatial data is a multipolygon features object. It contains 774 multipolygon features and 5 fields. It is in WGS 84 coordinates system, and the bounding box provides the x and y extends of the data.</p>
-<p><strong>Joining the aspatial data and geospatial data</strong></p>
-<p>Now we have prepared both the aspatial data and geospatial data. Let’s join them together.</p>
+</section>
+</section>
+<section id="extracting-information-about-non-functional-water-points" class="level2">
+<h2 class="anchored" data-anchor-id="extracting-information-about-non-functional-water-points"><strong>Extracting Information about Non-Functional Water Points</strong></h2>
+<p>There are a few things we could analyze to understand more about the non-functional water points. Some of the ideas are:</p>
+<ul>
+<li><p><strong>Number of non-functional water points</strong> in the regions</p></li>
+<li><p><strong>The source of the water at the non-functional water points.</strong> We could make use of the variable #water_source_category which contains the following categories:</p>
+<ul>
+<li>Well</li>
+<li>Piped Water</li>
+<li>Spring</li>
+</ul></li>
+<li><p><strong>The technology used at the non-functional water points.</strong> We could make use of the variable #water_tech_category which contains the following categories:</p>
+<ul>
+<li>Mechanized Pump</li>
+<li>Hand Pump</li>
+<li>Tapstand</li>
+<li>Unknown</li>
+</ul></li>
+</ul>
+<section id="extracting-water-points-from-different-water-sources" class="level3">
+<h3 class="anchored" data-anchor-id="extracting-water-points-from-different-water-sources">Extracting Water Points from Different Water Sources</h3>
+<p>Let’s extract the data of water points using well as the water source.</p>
 <div class="cell">
-
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>wp_s_well <span class="ot">&lt;-</span> wp_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="st">`</span><span class="at">#water_source_category</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Well"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Next, extract the data of water points using Piped Water as the water source.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>wp_s_pw <span class="ot">&lt;-</span> wp_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="st">`</span><span class="at">#water_source_category</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Piped Water"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Next, extract the data of water points using Spring as the water source.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>wp_s_spring <span class="ot">&lt;-</span> wp_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="st">`</span><span class="at">#water_source_category</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Spring"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="extracting-water-points-using-different-technologies" class="level3">
+<h3 class="anchored" data-anchor-id="extracting-water-points-using-different-technologies">Extracting Water Points using Different Technologies</h3>
+<p>Let’s extract the data of water points using Mechanized Pump.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>wp_t_mp <span class="ot">&lt;-</span> wp_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="st">`</span><span class="at">#water_tech_category</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Mechanized Pump"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Next, extract the data of water points using Hand Pump.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>wp_t_hp <span class="ot">&lt;-</span> wp_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="st">`</span><span class="at">#water_tech_category</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Hand Pump"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Next, extract the data of water points using Tapstand.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>wp_t_ts <span class="ot">&lt;-</span> wp_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="st">`</span><span class="at">#water_tech_category</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Tapstand"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Next, extract the data of water points using Unknown technology.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>wp_t_unknown <span class="ot">&lt;-</span> wp_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="st">`</span><span class="at">#water_tech_category</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Unknown"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="perform-pointin-polygon-count" class="level3">
+<h3 class="anchored" data-anchor-id="perform-pointin-polygon-count">Perform Point=in-Polygon Count</h3>
+<p>Let’s add the count of the water points into the geospatial data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>nga_wp <span class="ot">&lt;-</span> nga <span class="sc">%&gt;%</span> </span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">total_wpt =</span> <span class="fu">lengths</span>(</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_sf)</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_s_well =</span> <span class="fu">lengths</span>(</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_s_well)</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_s_pipe =</span> <span class="fu">lengths</span>(</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_s_pw)</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_s_spring =</span> <span class="fu">lengths</span>(</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_s_spring)</span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_t_mechanical =</span> <span class="fu">lengths</span>(</span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_t_mp)</span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_t_hand =</span> <span class="fu">lengths</span>(</span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga,wp_t_hp)</span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
+<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_t_tap =</span> <span class="fu">lengths</span>(</span>
+<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_t_ts)</span>
+<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
+<span id="cb34-23"><a href="#cb34-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_t_unknown =</span> <span class="fu">lengths</span>(</span>
+<span id="cb34-24"><a href="#cb34-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_t_unknown)</span>
+<span id="cb34-25"><a href="#cb34-25" aria-hidden="true" tabindex="-1"></a>  ))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s also calculate the percentage of different water sources and technologies.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>nga_wp <span class="ot">&lt;-</span> nga_wp <span class="sc">%&gt;%</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_s_well_pct =</span> wpt_s_well <span class="sc">/</span> total_wpt) <span class="sc">%&gt;%</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_s_pipe_pct =</span> wpt_s_pipe <span class="sc">/</span> total_wpt) <span class="sc">%&gt;%</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_s_spring_pct =</span> wpt_s_spring <span class="sc">/</span> total_wpt) <span class="sc">%&gt;%</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_t_mechanical_pct =</span> wpt_t_mechanical <span class="sc">/</span> total_wpt) <span class="sc">%&gt;%</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_t_hand_pct =</span> wpt_t_hand <span class="sc">/</span> total_wpt) <span class="sc">%&gt;%</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_t_tap_pct =</span> wpt_t_tap <span class="sc">/</span> total_wpt) <span class="sc">%&gt;%</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_t_unknown_pct =</span> wpt_t_unknown <span class="sc">/</span> total_wpt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="saving-the-analytical-data-table" class="level3">
+<h3 class="anchored" data-anchor-id="saving-the-analytical-data-table">Saving the Analytical Data Table</h3>
+<p>Now we have prepared the analytical data table. Let’s save the simple feature data table into rds format.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(nga_wp, <span class="st">"Data/nga_wp.rds"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>

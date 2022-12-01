@@ -200,11 +200,131 @@ nga <- st_read(dsn = "Data/geoBoundaries-NGA-ADM2-all",
 
 We can see that this geospatial data is a multipolygon features object. It contains 774 multipolygon features and 5 fields. It is in WGS 84 coordinates system, and the bounding box provides the x and y extends of the data.
 
-**Joining the aspatial data and geospatial data**
+## **Extracting Information about Non-Functional Water Points**
 
-Now we have prepared both the aspatial data and geospatial data. Let's join them together.
+There are a few things we could analyze to understand more about the non-functional water points. Some of the ideas are:
+
+-   **Number of non-functional water points** in the regions
+
+-   **The source of the water at the non-functional water points.** We could make use of the variable #water_source_category which contains the following categories:
+
+    -   Well
+    -   Piped Water
+    -   Spring
+
+-   **The technology used at the non-functional water points.** We could make use of the variable #water_tech_category which contains the following categories:
+
+    -   Mechanized Pump
+    -   Hand Pump
+    -   Tapstand
+    -   Unknown
+
+### Extracting Water Points from Different Water Sources
+
+Let's extract the data of water points using well as the water source.
 
 ```{r}
+wp_s_well <- wp_sf %>% filter(`#water_source_category` == "Well")
+
+```
+
+Next, extract the data of water points using Piped Water as the water source.
+
+```{r}
+wp_s_pw <- wp_sf %>% filter(`#water_source_category` == "Piped Water")
+
+```
+
+Next, extract the data of water points using Spring as the water source.
+
+```{r}
+wp_s_spring <- wp_sf %>% filter(`#water_source_category` == "Spring")
+
+```
+
+### Extracting Water Points using Different Technologies
+
+Let's extract the data of water points using Mechanized Pump.
+
+```{r}
+wp_t_mp <- wp_sf %>% filter(`#water_tech_category` == "Mechanized Pump")
+
+```
+
+Next, extract the data of water points using Hand Pump.
+
+```{r}
+wp_t_hp <- wp_sf %>% filter(`#water_tech_category` == "Hand Pump")
+
+```
+
+Next, extract the data of water points using Tapstand.
+
+```{r}
+wp_t_ts <- wp_sf %>% filter(`#water_tech_category` == "Tapstand")
+
+```
+
+Next, extract the data of water points using Unknown technology.
+
+```{r}
+wp_t_unknown <- wp_sf %>% filter(`#water_tech_category` == "Unknown")
+
+```
+
+### Perform Point=in-Polygon Count
+
+Let's add the count of the water points into the geospatial data.
+
+```{r}
+nga_wp <- nga %>% 
+  mutate(total_wpt = lengths(
+    st_intersects(nga, wp_sf)
+  )) %>%
+  mutate(wpt_s_well = lengths(
+    st_intersects(nga, wp_s_well)
+  )) %>%
+  mutate(wpt_s_pipe = lengths(
+    st_intersects(nga, wp_s_pw)
+  )) %>%
+  mutate(wpt_s_spring = lengths(
+    st_intersects(nga, wp_s_spring)
+  )) %>%
+  mutate(wpt_t_mechanical = lengths(
+    st_intersects(nga, wp_t_mp)
+  )) %>%
+  mutate(wpt_t_hand = lengths(
+    st_intersects(nga,wp_t_hp)
+  )) %>%
+  mutate(wpt_t_tap = lengths(
+    st_intersects(nga, wp_t_ts)
+  )) %>%
+  mutate(wpt_t_unknown = lengths(
+    st_intersects(nga, wp_t_unknown)
+  ))
+
+```
+
+Let's also calculate the percentage of different water sources and technologies.
+
+```{r}
+nga_wp <- nga_wp %>%
+  mutate(wpt_s_well_pct = wpt_s_well / total_wpt) %>%
+  mutate(wpt_s_pipe_pct = wpt_s_pipe / total_wpt) %>%
+  mutate(wpt_s_spring_pct = wpt_s_spring / total_wpt) %>%
+  mutate(wpt_t_mechanical_pct = wpt_t_mechanical / total_wpt) %>%
+  mutate(wpt_t_hand_pct = wpt_t_hand / total_wpt) %>%
+  mutate(wpt_t_tap_pct = wpt_t_tap / total_wpt) %>%
+  mutate(wpt_t_unknown_pct = wpt_t_unknown / total_wpt)
+
+```
+
+### Saving the Analytical Data Table
+
+Now we have prepared the analytical data table. Let's save the simple feature data table into rds format.
+
+```{r}
+write_rds(nga_wp, "Data/nga_wp.rds")
 
 ```
 
