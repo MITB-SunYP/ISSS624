@@ -84,7 +84,7 @@ list(wp)
 
 The subset now contains only data for Nigeria, and it has 95,008 rows and 70 columns.
 
-As our focus is to study the non-functional water points, we'll need to filter the data set where "#status" starts with "Non-functional".
+As our focus is to study the non-functional water points, let's create a new column to indicate if the water points are functional or non-functional.
 
 ```{r}
 #| eval: false
@@ -96,15 +96,6 @@ unique(wp$status_n)
 
 ```
 
-```{r}
-#| eval: false
-# Filter the data set where status_n == Non-functional
-wp <- subset(wp, status_n == "Non-functional")
-
-```
-
-The data set now contains only the data for non-functional water points, and it has 32,101 rows and 71 columns.
-
 Now let's save the data set with the selected columns.
 
 ```{r}
@@ -112,6 +103,7 @@ Now let's save the data set with the selected columns.
 wp <- wp %>% select(c(`#lat_deg`,
                 `#lon_deg`,
                 `#clean_adm2`,
+                status_n,
                 `#water_source_category`,
                 `#water_tech_category`,
                 `#install_year`,
@@ -133,6 +125,7 @@ write_csv(wp, "Data/Water_Point_Nigeria.csv")
 After reducing the data file size, let's import the data again for analysis.
 
 ```{r}
+#| eval: false
 wp <- read_csv("Data/Water_Point_Nigeria.csv")
 
 ```
@@ -142,6 +135,7 @@ The data set now contains 32,101 rows and the selected 11 columns.
 Let's take a look at some data in the wp data frame to check if the data is imported correctly.
 
 ```{r}
+#| eval: false
 list(wp)
 
 ```
@@ -149,6 +143,7 @@ list(wp)
 We could observe that some string columns contain NA's. Let's recode the NA's into Unknown.
 
 ```{r}
+#| eval: false
 wp <- wp %>% mutate_at(vars(`#water_source_category`, 
                             `#water_tech_category`,
                             `#management_clean`,
@@ -158,12 +153,13 @@ wp <- wp %>% mutate_at(vars(`#water_source_category`,
 ```
 
 ```{r}
+#| eval: false
 unique(wp$`#water_source_category`)
-
+#| eval: false
 unique(wp$`#water_tech_category`)
-
+#| eval: false
 unique(wp$`#management_clean`)
-
+#| eval: false
 unique(wp$`#subjective_quality`)
 
 ```
@@ -173,6 +169,7 @@ All the NA's have been recoded into Unknown.
 We also could notice that latitude and longitude columns contains decimal values. Hence, we could assume they are in WGS 84 Geographic Coordinate System.
 
 ```{r}
+#| eval: false
 wp_sf <- st_as_sf(wp,
                   coords = c("#lon_deg", "#lat_deg"),
                   crs = 4326)
@@ -182,6 +179,7 @@ wp_sf <- st_as_sf(wp,
 Let's take a look at the new simple feature data frame.
 
 ```{r}
+#| eval: false
 glimpse(wp_sf)
 
 ```
@@ -193,6 +191,7 @@ We have a new column, geometry, added into the simple feature data frame. The or
 Next, let's import the geospatial data into R as a polygon feature data.
 
 ```{r}
+#| eval: false
 nga <- st_read(dsn = "Data/geoBoundaries-NGA-ADM2-all",
                layer = "geoBoundaries-NGA-ADM2")
 
@@ -200,7 +199,7 @@ nga <- st_read(dsn = "Data/geoBoundaries-NGA-ADM2-all",
 
 We can see that this geospatial data is a multipolygon features object. It contains 774 multipolygon features and 5 fields. It is in WGS 84 coordinates system, and the bounding box provides the x and y extends of the data.
 
-## **Extracting Information about Non-Functional Water Points**
+## Extracting Information about Non-Functional Water Points
 
 There are a few things we could analyze to understand more about the non-functional water points. Some of the ideas are:
 
@@ -219,103 +218,142 @@ There are a few things we could analyze to understand more about the non-functio
     -   Tapstand
     -   Unknown
 
-### Extracting Water Points from Different Water Sources
+### Extracting Non-Functional Water Points
 
-Let's extract the data of water points using well as the water source.
+Let's extract the data of non-functional water points.
 
 ```{r}
-wp_s_well <- wp_sf %>% filter(`#water_source_category` == "Well")
+#| eval: false
+wp_nonfunc <- wp_sf %>% filter(status_n == "Non-functional")
+
+```
+
+### Extracting Non-Functional Water Points from Different Water Sources
+
+Let's check what are the different water sources for non-functional water points.
+
+```{r}
+#| eval: false
+unique(wp_nonfunc$`#water_source_category`)
+
+```
+
+Next, extract the data of water points using well as the water source.
+
+```{r}
+#| eval: false
+wp_s_well <- wp_sf %>% filter(status_n == "Non-functional" & `#water_source_category` == "Well")
 
 ```
 
 Next, extract the data of water points using Piped Water as the water source.
 
 ```{r}
-wp_s_pw <- wp_sf %>% filter(`#water_source_category` == "Piped Water")
+#| eval: false
+wp_s_pw <- wp_sf %>% filter(status_n == "Non-functional" & `#water_source_category` == "Piped Water")
 
 ```
 
 Next, extract the data of water points using Spring as the water source.
 
 ```{r}
-wp_s_spring <- wp_sf %>% filter(`#water_source_category` == "Spring")
+#| eval: false
+wp_s_spring <- wp_sf %>% filter(status_n == "Non-functional" & `#water_source_category` == "Spring")
 
 ```
 
 ### Extracting Water Points using Different Technologies
 
-Let's extract the data of water points using Mechanized Pump.
+Let's check what are the different technologies used at non-functional water points.
 
 ```{r}
-wp_t_mp <- wp_sf %>% filter(`#water_tech_category` == "Mechanized Pump")
+#| eval: false
+unique(wp_nonfunc$`#water_tech_category`)
+
+```
+
+Next, extract the data of water points using Mechanized Pump.
+
+```{r}
+#| eval: false
+wp_t_mp <- wp_sf %>% filter(status_n == "Non-functional" & `#water_tech_category` == "Mechanized Pump")
 
 ```
 
 Next, extract the data of water points using Hand Pump.
 
 ```{r}
-wp_t_hp <- wp_sf %>% filter(`#water_tech_category` == "Hand Pump")
+#| eval: false
+wp_t_hp <- wp_sf %>% filter(status_n == "Non-functional" & `#water_tech_category` == "Hand Pump")
 
 ```
 
 Next, extract the data of water points using Tapstand.
 
 ```{r}
-wp_t_ts <- wp_sf %>% filter(`#water_tech_category` == "Tapstand")
+#| eval: false
+wp_t_ts <- wp_sf %>% filter(status_n == "Non-functional" & `#water_tech_category` == "Tapstand")
 
 ```
 
 Next, extract the data of water points using Unknown technology.
 
 ```{r}
-wp_t_unknown <- wp_sf %>% filter(`#water_tech_category` == "Unknown")
+#| eval: false
+wp_t_unknown <- wp_sf %>% filter(status_n == "Non-functional" & `#water_tech_category` == "Unknown")
 
 ```
 
-### Perform Point=in-Polygon Count
+### Perform Point-in-Polygon Count
 
 Let's add the count of the water points into the geospatial data.
 
 ```{r}
+#| eval: false
 nga_wp <- nga %>% 
   mutate(total_wpt = lengths(
     st_intersects(nga, wp_sf)
   )) %>%
-  mutate(wpt_s_well = lengths(
+  mutate(wpt_nonfunc = lengths(
+    st_intersects(nga, wp_nonfunc)
+  )) %>%
+  mutate(wpt_nonfunc_s_well = lengths(
     st_intersects(nga, wp_s_well)
   )) %>%
-  mutate(wpt_s_pipe = lengths(
+  mutate(wpt_nonfunc_s_pipe = lengths(
     st_intersects(nga, wp_s_pw)
   )) %>%
-  mutate(wpt_s_spring = lengths(
+  mutate(wpt_nonfunc_s_spring = lengths(
     st_intersects(nga, wp_s_spring)
   )) %>%
-  mutate(wpt_t_mechanical = lengths(
+  mutate(wpt_nonfunc_t_mechanical = lengths(
     st_intersects(nga, wp_t_mp)
   )) %>%
-  mutate(wpt_t_hand = lengths(
+  mutate(wpt_nonfunc_t_hand = lengths(
     st_intersects(nga,wp_t_hp)
   )) %>%
-  mutate(wpt_t_tap = lengths(
+  mutate(wpt_nonfunc_t_tap = lengths(
     st_intersects(nga, wp_t_ts)
   )) %>%
-  mutate(wpt_t_unknown = lengths(
+  mutate(wpt_nonfunc_t_unknown = lengths(
     st_intersects(nga, wp_t_unknown)
   ))
 
 ```
 
-Let's also calculate the percentage of different water sources and technologies.
+Let's also calculate the percentage of non-functional water points, as well as the percentages of different water sources and technologies among non-functional water points.
 
 ```{r}
+#| eval: false
 nga_wp <- nga_wp %>%
-  mutate(wpt_s_well_pct = wpt_s_well / total_wpt) %>%
-  mutate(wpt_s_pipe_pct = wpt_s_pipe / total_wpt) %>%
-  mutate(wpt_s_spring_pct = wpt_s_spring / total_wpt) %>%
-  mutate(wpt_t_mechanical_pct = wpt_t_mechanical / total_wpt) %>%
-  mutate(wpt_t_hand_pct = wpt_t_hand / total_wpt) %>%
-  mutate(wpt_t_tap_pct = wpt_t_tap / total_wpt) %>%
-  mutate(wpt_t_unknown_pct = wpt_t_unknown / total_wpt)
+  mutate(wpt_nonfunc_pct = wpt_nonfunc / total_wpt) %>%
+  mutate(wpt_nonfunc_s_well_pct = wpt_nonfunc_s_well / wpt_nonfunc) %>%
+  mutate(wpt_nonfunc_s_pipe_pct = wpt_nonfunc_s_pipe / wpt_nonfunc) %>%
+  mutate(wpt_nonfunc_s_spring_pct = wpt_nonfunc_s_spring / wpt_nonfunc) %>%
+  mutate(wpt_nonfunc_t_mechanical_pct = wpt_nonfunc_t_mechanical / wpt_nonfunc) %>%
+  mutate(wpt_nonfunc_t_hand_pct = wpt_nonfunc_t_hand / wpt_nonfunc) %>%
+  mutate(wpt_nonfunc_t_tap_pct = wpt_nonfunc_t_tap / wpt_nonfunc) %>%
+  mutate(wpt_nonfunc_t_unknown_pct = wpt_nonfunc_t_unknown / wpt_nonfunc)
 
 ```
 
@@ -324,7 +362,36 @@ nga_wp <- nga_wp %>%
 Now we have prepared the analytical data table. Let's save the simple feature data table into rds format.
 
 ```{r}
+#| eval: false
 write_rds(nga_wp, "Data/nga_wp.rds")
+
+```
+
+## Visualizing the Spatial Distribution of Water Points
+
+Let's first import the analytical data back into R.
+
+```{r}
+nga_wp <- read_rds("Data/nga_wp.rds")
+
+```
+
+Let's take a look at the distribution of the non-functional water points in Nigeria.
+
+```{r}
+tm_shape(nga_wp) +
+  tm_fill("wpt_nonfunc",
+          style = "quantile",
+          title = "Count") +
+  tm_layout(main.title = "Distribution of Non-Function Water Points in Nigeria",
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.45,
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_scale_bar() +
+  tm_grid(alpha = 0.2)
 
 ```
 
