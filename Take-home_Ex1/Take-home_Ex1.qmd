@@ -103,7 +103,7 @@ wp <- subset(wp, status_n == "Non-functional")
 
 ```
 
-The data set now contains only the data for non-functional water points, and it has 32,101 rows and 70 columns.
+The data set now contains only the data for non-functional water points, and it has 32,101 rows and 71 columns.
 
 Now let's save the data set with the selected columns.
 
@@ -111,6 +111,7 @@ Now let's save the data set with the selected columns.
 #| eval: false
 wp <- wp %>% select(c(`#lat_deg`,
                 `#lon_deg`,
+                `#clean_adm2`,
                 `#water_source_category`,
                 `#water_tech_category`,
                 `#install_year`,
@@ -136,7 +137,76 @@ wp <- read_csv("Data/Water_Point_Nigeria.csv")
 
 ```
 
-The data set now contains 32,101 rows and the selected 10 columns.
+The data set now contains 32,101 rows and the selected 11 columns.
+
+Let's take a look at some data in the wp data frame to check if the data is imported correctly.
+
+```{r}
+list(wp)
+
+```
+
+We could observe that some string columns contain NA's. Let's recode the NA's into Unknown.
+
+```{r}
+wp <- wp %>% mutate_at(vars(`#water_source_category`, 
+                            `#water_tech_category`,
+                            `#management_clean`,
+                            `#subjective_quality`),
+                       ~replace_na(., "Unknown"))
+
+```
+
+```{r}
+unique(wp$`#water_source_category`)
+
+unique(wp$`#water_tech_category`)
+
+unique(wp$`#management_clean`)
+
+unique(wp$`#subjective_quality`)
+
+```
+
+All the NA's have been recoded into Unknown.
+
+We also could notice that latitude and longitude columns contains decimal values. Hence, we could assume they are in WGS 84 Geographic Coordinate System.
+
+```{r}
+wp_sf <- st_as_sf(wp,
+                  coords = c("#lon_deg", "#lat_deg"),
+                  crs = 4326)
+
+```
+
+Let's take a look at the new simple feature data frame.
+
+```{r}
+glimpse(wp_sf)
+
+```
+
+We have a new column, geometry, added into the simple feature data frame. The original latitude and longitude columns have been dropped.
+
+**Geospatial Data**
+
+Next, let's import the geospatial data into R as a polygon feature data.
+
+```{r}
+nga <- st_read(dsn = "Data/geoBoundaries-NGA-ADM2-all",
+               layer = "geoBoundaries-NGA-ADM2")
+
+```
+
+We can see that this geospatial data is a multipolygon features object. It contains 774 multipolygon features and 5 fields. It is in WGS 84 coordinates system, and the bounding box provides the x and y extends of the data.
+
+**Joining the aspatial data and geospatial data**
+
+Now we have prepared both the aspatial data and geospatial data. Let's join them together.
+
+```{r}
+
+```
 
 ## References
 

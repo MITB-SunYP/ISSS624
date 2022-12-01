@@ -301,20 +301,21 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter the data set where status_n == Non-functional</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>wp <span class="ot">&lt;-</span> <span class="fu">subset</span>(wp, status_n <span class="sc">==</span> <span class="st">"Non-functional"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The data set now contains only the data for non-functional water points, and it has 32,101 rows and 70 columns.</p>
+<p>The data set now contains only the data for non-functional water points, and it has 32,101 rows and 71 columns.</p>
 <p>Now let’s save the data set with the selected columns.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>wp <span class="ot">&lt;-</span> wp <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="fu">c</span>(<span class="st">`</span><span class="at">#lat_deg</span><span class="st">`</span>,</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>                <span class="st">`</span><span class="at">#lon_deg</span><span class="st">`</span>,</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                <span class="st">`</span><span class="at">#water_source_category</span><span class="st">`</span>,</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                <span class="st">`</span><span class="at">#water_tech_category</span><span class="st">`</span>,</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>                <span class="st">`</span><span class="at">#install_year</span><span class="st">`</span>,</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>                <span class="st">`</span><span class="at">#management_clean</span><span class="st">`</span>,</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>                <span class="st">`</span><span class="at">#subjective_quality</span><span class="st">`</span>,</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                water_point_population,</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                local_population_1km,</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                crucialness_score</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                <span class="st">`</span><span class="at">#clean_adm2</span><span class="st">`</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                <span class="st">`</span><span class="at">#water_source_category</span><span class="st">`</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>                <span class="st">`</span><span class="at">#water_tech_category</span><span class="st">`</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>                <span class="st">`</span><span class="at">#install_year</span><span class="st">`</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>                <span class="st">`</span><span class="at">#management_clean</span><span class="st">`</span>,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                <span class="st">`</span><span class="at">#subjective_quality</span><span class="st">`</span>,</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                water_point_population,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                local_population_1km,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>                crucialness_score</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(wp, <span class="st">"Data/Water_Point_Nigeria.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -323,17 +324,124 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>wp <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"Data/Water_Point_Nigeria.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Rows: 32101 Columns: 10
+<pre><code>Rows: 32101 Columns: 11
 ── Column specification ────────────────────────────────────────────────────────
 Delimiter: ","
-chr (4): #water_source_category, #water_tech_category, #management_clean, #s...
+chr (5): #clean_adm2, #water_source_category, #water_tech_category, #managem...
 dbl (6): #lat_deg, #lon_deg, #install_year, water_point_population, local_po...
 
 ℹ Use `spec()` to retrieve the full column specification for this data.
 ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
 </div>
 </div>
-<p>The data set now contains 32,101 rows and the selected 10 columns.</p>
+<p>The data set now contains 32,101 rows and the selected 11 columns.</p>
+<p>Let’s take a look at some data in the wp data frame to check if the data is imported correctly.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(wp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+# A tibble: 32,101 × 11
+   `#lat_deg` `#lon_deg` #clea…¹ #wate…² #wate…³ #inst…⁴ #mana…⁵ #subj…⁶ water…⁷
+        &lt;dbl&gt;      &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;
+ 1       5.28       7.67 Obot A… Well    Mechan…      NA &lt;NA&gt;    No bec…      NA
+ 2       4.64       7.61 Ikot A… Well    Mechan…    1983 &lt;NA&gt;    No bec…      NA
+ 3       5.30       7.61 Obot A… Well    Mechan…      NA &lt;NA&gt;    No bec…      NA
+ 4       5.28       7.94 Odukpa… Well    Mechan…      NA &lt;NA&gt;    No bec…      NA
+ 5       4.60       7.65 Ikot A… Well    Mechan…    2007 &lt;NA&gt;    No bec…      NA
+ 6       6.03       8.75 Ikom    Well    Mechan…      NA &lt;NA&gt;    No bec…      NA
+ 7       6.03       8.75 Ikom    Well    Mechan…      NA &lt;NA&gt;    No bec…      NA
+ 8       8.15       5.51 Yagba … Well    &lt;NA&gt;       2013 Other   No bec…      NA
+ 9       4.81       6.08 Southe… Well    &lt;NA&gt;       2000 &lt;NA&gt;    Accept…      NA
+10       5.34       7.77 Ini     Well    Mechan…    2013 &lt;NA&gt;    No bec…      NA
+# … with 32,091 more rows, 2 more variables: local_population_1km &lt;dbl&gt;,
+#   crucialness_score &lt;dbl&gt;, and abbreviated variable names ¹​`#clean_adm2`,
+#   ²​`#water_source_category`, ³​`#water_tech_category`, ⁴​`#install_year`,
+#   ⁵​`#management_clean`, ⁶​`#subjective_quality`, ⁷​water_point_population</code></pre>
+</div>
+</div>
+<p>We could observe that some string columns contain NA’s. Let’s recode the NA’s into Unknown.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>wp <span class="ot">&lt;-</span> wp <span class="sc">%&gt;%</span> <span class="fu">mutate_at</span>(<span class="fu">vars</span>(<span class="st">`</span><span class="at">#water_source_category</span><span class="st">`</span>, </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>                            <span class="st">`</span><span class="at">#water_tech_category</span><span class="st">`</span>,</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>                            <span class="st">`</span><span class="at">#management_clean</span><span class="st">`</span>,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>                            <span class="st">`</span><span class="at">#subjective_quality</span><span class="st">`</span>),</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>                       <span class="sc">~</span><span class="fu">replace_na</span>(., <span class="st">"Unknown"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(wp<span class="sc">$</span><span class="st">`</span><span class="at">#water_source_category</span><span class="st">`</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Well"        "Piped Water" "Spring"     </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(wp<span class="sc">$</span><span class="st">`</span><span class="at">#water_tech_category</span><span class="st">`</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Mechanized Pump" "Unknown"         "Hand Pump"       "Tapstand"       </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(wp<span class="sc">$</span><span class="st">`</span><span class="at">#management_clean</span><span class="st">`</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Unknown"                              
+[2] "Other"                                
+[3] "Community Management"                 
+[4] "Direct Government Operation"          
+[5] "School Management"                    
+[6] "Private Operator/Delegated Management"
+[7] "Health Care Facility"                 
+[8] "Other Institutional Management"       </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(wp<span class="sc">$</span><span class="st">`</span><span class="at">#subjective_quality</span><span class="st">`</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "No because of Colour"                "No because of Taste"                
+[3] "Acceptable quality"                  "No because of Odour"                
+[5] "Within National standards (potable)" "Within National limits (potable)"   </code></pre>
+</div>
+</div>
+<p>All the NA’s have been recoded into Unknown.</p>
+<p>We also could notice that latitude and longitude columns contains decimal values. Hence, we could assume they are in WGS 84 Geographic Coordinate System.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>wp_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(wp,</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"#lon_deg"</span>, <span class="st">"#lat_deg"</span>),</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">crs =</span> <span class="dv">4326</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s take a look at the new simple feature data frame.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(wp_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 32,101
+Columns: 10
+$ `#clean_adm2`            &lt;chr&gt; "Obot Akara", "Ikot Abasi", "Obot Akara", "Od…
+$ `#water_source_category` &lt;chr&gt; "Well", "Well", "Well", "Well", "Well", "Well…
+$ `#water_tech_category`   &lt;chr&gt; "Mechanized Pump", "Mechanized Pump", "Mechan…
+$ `#install_year`          &lt;dbl&gt; NA, 1983, NA, NA, 2007, NA, NA, 2013, 2000, 2…
+$ `#management_clean`      &lt;chr&gt; "Unknown", "Unknown", "Unknown", "Unknown", "…
+$ `#subjective_quality`    &lt;chr&gt; "No because of Colour", "No because of Taste"…
+$ water_point_population   &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+$ local_population_1km     &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+$ crucialness_score        &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+$ geometry                 &lt;POINT [°]&gt; POINT (7.670047 5.28026), POINT (7.6078…</code></pre>
+</div>
+</div>
+<p>We have a new column, geometry, added into the simple feature data frame. The original latitude and longitude columns have been dropped.</p>
+<p><strong>Geospatial Data</strong></p>
+<p>Next, let’s import the geospatial data into R as a polygon feature data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>nga <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"Data/geoBoundaries-NGA-ADM2-all"</span>,</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">layer =</span> <span class="st">"geoBoundaries-NGA-ADM2"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `geoBoundaries-NGA-ADM2' from data source 
+  `D:\MITB_SunYP\ISSS624\Take-home_Ex1\Data\geoBoundaries-NGA-ADM2-all' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 774 features and 5 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: 2.668534 ymin: 4.273007 xmax: 14.67882 ymax: 13.89442
+Geodetic CRS:  WGS 84</code></pre>
+</div>
+</div>
+<p>We can see that this geospatial data is a multipolygon features object. It contains 774 multipolygon features and 5 fields. It is in WGS 84 coordinates system, and the bounding box provides the x and y extends of the data.</p>
+<p><strong>Joining the aspatial data and geospatial data</strong></p>
+<p>Now we have prepared both the aspatial data and geospatial data. Let’s join them together.</p>
+<div class="cell">
+
+</div>
 </section>
 </section>
 <section id="references" class="level2">
