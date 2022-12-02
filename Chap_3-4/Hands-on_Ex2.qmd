@@ -5,7 +5,7 @@ editor: visual
 
 ## Overview
 
-In this in-class exercise, I learned how to compute Global and Local Measure of Spatial Autocorrelation (GLSA) using R.
+In this hands-on exercise, I learned how to compute Global and Local Measure of Spatial Autocorrelation (GLSA) using R.
 
 ## Getting Started
 
