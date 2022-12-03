@@ -420,3 +420,393 @@ ggarrange(r, s, z,
 ```
 
 -   **TV penetration rate**
+
+```{r}
+r <- ggplot(data = ict_derived, 
+            aes(x = `TV_PR`)) +
+  geom_histogram(bins = 20, 
+                 color = "black", 
+                 fill = "light blue") +
+  ggtitle("Raw values without standardisation")
+
+shan_ict_s_df <- as.data.frame(shan_ict.std)
+s <- ggplot(data = shan_ict_s_df, 
+            aes(x = `TV_PR`)) +
+  geom_histogram(bins = 20, 
+                 color = "black", 
+                 fill = "light blue") +
+  ggtitle("Min-Max Standardisation")
+
+shan_ict_z_df <- as.data.frame(shan_ict.z)
+z <- ggplot(data = shan_ict_z_df, 
+            aes(x = `TV_PR`)) +
+  geom_histogram(bins = 20, 
+                 color = "black", 
+                 fill = "light blue") +
+  ggtitle("Z-score Standardisation")
+
+ggarrange(r, s, z,
+          ncol = 3,
+          nrow = 1)
+
+```
+
+```{r}
+r <- ggplot(data = ict_derived, 
+            aes(x= `TV_PR`)) +
+  geom_density(color = "black",
+               fill = "light blue") +
+  ggtitle("Raw values without standardisation")
+
+shan_ict_s_df <- as.data.frame(shan_ict.std)
+s <- ggplot(data = shan_ict_s_df, 
+            aes(x = `TV_PR`)) +
+  geom_density(color = "black",
+               fill = "light blue") +
+  ggtitle("Min-Max Standardisation")
+
+shan_ict_z_df <- as.data.frame(shan_ict.z)
+z <- ggplot(data = shan_ict_z_df, 
+            aes(x = `TV_PR`)) +
+  geom_density(color = "black",
+               fill = "light blue") +
+  ggtitle("Z-score Standardisation")
+
+ggarrange(r, s, z,
+          ncol = 3,
+          nrow = 1)
+
+```
+
+-   **Land line phone penetration rate**
+
+```{r}
+r <- ggplot(data = ict_derived, 
+            aes(x = `LLPHONE_PR`)) +
+  geom_histogram(bins = 20, 
+                 color = "black", 
+                 fill = "light blue") +
+  ggtitle("Raw values without standardisation")
+
+shan_ict_s_df <- as.data.frame(shan_ict.std)
+s <- ggplot(data = shan_ict_s_df, 
+            aes(x = `LLPHONE_PR`)) +
+  geom_histogram(bins = 20, 
+                 color = "black", 
+                 fill = "light blue") +
+  ggtitle("Min-Max Standardisation")
+
+shan_ict_z_df <- as.data.frame(shan_ict.z)
+z <- ggplot(data = shan_ict_z_df, 
+            aes(x = `LLPHONE_PR`)) +
+  geom_histogram(bins = 20, 
+                 color = "black", 
+                 fill = "light blue") +
+  ggtitle("Z-score Standardisation")
+
+ggarrange(r, s, z,
+          ncol = 3,
+          nrow = 1)
+
+```
+
+```{r}
+r <- ggplot(data = ict_derived, 
+            aes(x= `LLPHONE_PR`)) +
+  geom_density(color = "black",
+               fill = "light blue") +
+  ggtitle("Raw values without standardisation")
+
+shan_ict_s_df <- as.data.frame(shan_ict.std)
+s <- ggplot(data = shan_ict_s_df, 
+            aes(x = `LLPHONE_PR`)) +
+  geom_density(color = "black",
+               fill = "light blue") +
+  ggtitle("Min-Max Standardisation")
+
+shan_ict_z_df <- as.data.frame(shan_ict.z)
+z <- ggplot(data = shan_ict_z_df, 
+            aes(x = `LLPHONE_PR`)) +
+  geom_density(color = "black",
+               fill = "light blue") +
+  ggtitle("Z-score Standardisation")
+
+ggarrange(r, s, z,
+          ncol = 3,
+          nrow = 1)
+
+```
+
+-   **Mobile phone penetration rate**
+
+```{r}
+r <- ggplot(data = ict_derived, 
+            aes(x = `MPHONE_PR`)) +
+  geom_histogram(bins = 20, 
+                 color = "black", 
+                 fill = "light blue") +
+  ggtitle("Raw values without standardisation")
+
+shan_ict_s_df <- as.data.frame(shan_ict.std)
+s <- ggplot(data = shan_ict_s_df, 
+            aes(x = `MPHONE_PR`)) +
+  geom_histogram(bins = 20, 
+                 color = "black", 
+                 fill = "light blue") +
+  ggtitle("Min-Max Standardisation")
+
+shan_ict_z_df <- as.data.frame(shan_ict.z)
+z <- ggplot(data = shan_ict_z_df, 
+            aes(x = `MPHONE_PR`)) +
+  geom_histogram(bins = 20, 
+                 color = "black", 
+                 fill = "light blue") +
+  ggtitle("Z-score Standardisation")
+
+ggarrange(r, s, z,
+          ncol = 3,
+          nrow = 1)
+
+```
+
+```{r}
+r <- ggplot(data = ict_derived, 
+            aes(x= `MPHONE_PR`)) +
+  geom_density(color = "black",
+               fill = "light blue") +
+  ggtitle("Raw values without standardisation")
+
+shan_ict_s_df <- as.data.frame(shan_ict.std)
+s <- ggplot(data = shan_ict_s_df, 
+            aes(x = `MPHONE_PR`)) +
+  geom_density(color = "black",
+               fill = "light blue") +
+  ggtitle("Min-Max Standardisation")
+
+shan_ict_z_df <- as.data.frame(shan_ict.z)
+z <- ggplot(data = shan_ict_z_df, 
+            aes(x = `MPHONE_PR`)) +
+  geom_density(color = "black",
+               fill = "light blue") +
+  ggtitle("Z-score Standardisation")
+
+ggarrange(r, s, z,
+          ncol = 3,
+          nrow = 1)
+
+```
+
+-   **Computer penetration rate**
+
+```{r}
+r <- ggplot(data = ict_derived, 
+            aes(x = `COMPUTER_PR`)) +
+  geom_histogram(bins = 20, 
+                 color = "black", 
+                 fill = "light blue") +
+  ggtitle("Raw values without standardisation")
+
+shan_ict_s_df <- as.data.frame(shan_ict.std)
+s <- ggplot(data = shan_ict_s_df, 
+            aes(x = `COMPUTER_PR`)) +
+  geom_histogram(bins = 20, 
+                 color = "black", 
+                 fill = "light blue") +
+  ggtitle("Min-Max Standardisation")
+
+shan_ict_z_df <- as.data.frame(shan_ict.z)
+z <- ggplot(data = shan_ict_z_df, 
+            aes(x = `COMPUTER_PR`)) +
+  geom_histogram(bins = 20, 
+                 color = "black", 
+                 fill = "light blue") +
+  ggtitle("Z-score Standardisation")
+
+ggarrange(r, s, z,
+          ncol = 3,
+          nrow = 1)
+
+```
+
+```{r}
+r <- ggplot(data = ict_derived, 
+            aes(x= `COMPUTER_PR`)) +
+  geom_density(color = "black",
+               fill = "light blue") +
+  ggtitle("Raw values without standardisation")
+
+shan_ict_s_df <- as.data.frame(shan_ict.std)
+s <- ggplot(data = shan_ict_s_df, 
+            aes(x = `COMPUTER_PR`)) +
+  geom_density(color = "black",
+               fill = "light blue") +
+  ggtitle("Min-Max Standardisation")
+
+shan_ict_z_df <- as.data.frame(shan_ict.z)
+z <- ggplot(data = shan_ict_z_df, 
+            aes(x = `COMPUTER_PR`)) +
+  geom_density(color = "black",
+               fill = "light blue") +
+  ggtitle("Z-score Standardisation")
+
+ggarrange(r, s, z,
+          ncol = 3,
+          nrow = 1)
+
+```
+
+From the histogram and density plots, we could tell that the min-max normalization and Z-score standardization would only change the values of the variable, but don't change the distribution much.
+
+### Computing proximity matrix
+
+Since the penetration rates are already in the same range which is from 0 to 1000, we would use the non-normalized penetration rates for cluster analysis in this exercise.
+
+Now, let's compute the proximity matrix using euclidean distance.
+
+```{r}
+proxmat <- dist(shan_ict, method = 'euclidean')
+proxmat
+
+```
+
+### Computing hierarchical clustering
+
+Let's compute the cluster and draw the dendrogram.
+
+```{r}
+hclust_ward <- hclust(proxmat, method = 'ward.D')
+
+plot(hclust_ward, cex = 0.6)
+
+```
+
+### Selecting the optimal clustering algorithm
+
+There are different ways to perform hierarchical clustering, we could use agnes() function of cluster package to identify which algorithm gives a stronger clustering structure. It calculates the agglomerative coefficient to measure the amount of clustering structure. An agglomerative coefficient being 1 indicates the strong clustering structure.
+
+Let's use this function to compare four clustering methods:
+
+-   average
+
+-   single
+
+-   complete
+
+-   ward
+
+```{r}
+m <- c( "average", "single", "complete", "ward")
+names(m) <- c( "average", "single", "complete", "ward")
+
+ac <- function(x) {
+  agnes(shan_ict, method = x)$ac
+}
+
+map_dbl(m, ac)
+
+```
+
+We could see that Ward's method gives the highest agglomerative coefficient, which means it has the strongest clustering structure. Therefore, Ward's method will be used in the subsequent analysis.
+
+### Determining optimal cluster
+
+There are three commonly used methods to determine the optimal clusters:
+
+-   Elbow Method
+
+-   Average Silhouette Method
+
+-   Gap Statistic Method
+
+We'll use **Gap Statistic Method** in this exercise.
+
+```{r}
+set.seed(12345)
+gap_stat <- clusGap(shan_ict, 
+                    FUN = hcut, 
+                    nstart = 25, 
+                    K.max = 10, 
+                    B = 50)
+# Print the result
+print(gap_stat, method = "firstmax")
+
+```
+
+It isn't easy to identify the optimal cluster from the output directly, a better way is to plot the gap statistic again different clusters.
+
+```{r}
+fviz_gap_stat(gap_stat)
+
+```
+
+Theoretically, the higher the gap statistic, the better the clusters. However, the highest gap statistic is provided at 1 cluster looking at the plot above. This doesn't fit the purpose of clustering analysis, and a typical clustering analysis should provide at least 3 clusters. Therefore, we would choose the 6 as our number of clusters.
+
+### Interpreting the dendrogram
+
+Now we have determined our number of clusters, let's visualize them in the dendrogram.
+
+```{r}
+plot(hclust_ward, cex = 0.6)
+rect.hclust(hclust_ward, 
+            k = 6, 
+            border = 2:5)
+
+```
+
+We could see that the 6 clusters have been boxed out in the dendrogram.
+
+### Visually-driven hierarchical clustering analysis
+
+The dendrogram only provides us the township names in each cluster, but there isn't enough information to help us to describe the clusters.
+
+Hence, we will build an interactive cluster heatmap to understand more about the clusters.
+
+Let's transform the data frame into a matrix.
+
+```{r}
+shan_ict_mat <- data.matrix(shan_ict)
+
+```
+
+Next, we plot the interactive cluster heatmap.
+
+```{r}
+heatmaply(normalize(shan_ict_mat),
+          Colv = NA,
+          dist_method = "euclidean",
+          hclust_method = "ward.D",
+          seriate = "OLO",
+          colors = Blues,
+          k_row = 6,
+          margins = c(NA,200,60,NA),
+          fontsize_row = 4,
+          fontsize_col = 5,
+          main="Geographic Segmentation of Shan State by ICT indicators",
+          xlab = "ICT Indicators",
+          ylab = "Townships of Shan State"
+          )
+
+```
+
+It would display the relevant information as our mouse moves on the interactive heatmap. With the additional information on the penetration rates, we are able to see some distictive differences among the clusters. For example, the purple cluster on the top has high penetration rates for TV, mobile phone and computer. On the other hand, the green cluster in the middle has high penetration rate for land line phone but not others.
+
+Therefore, 6 clusters is a good starting point for the analysis.
+
+### Mapping the clusters formed
+
+Now, let's map the clusters to the townships in the simple feature data frame. This would allow us to visualize the clusters in the choropleth map.
+
+```{r}
+groups <- as.factor(cutree(hclust_ward, k=6))
+
+shan_sf_cluster <- cbind(shan_sf, as.matrix(groups)) %>%
+  rename(`CLUSTER`=`as.matrix.groups.`)
+
+```
+
+```{r}
+qtm(shan_sf_cluster, "CLUSTER")
+
+```
+
+We are now able to see where are the 6 clusters on the choropleth map. However, some of the townships are far away from each other although they are from the same cluster which is not good for business decision making. The reason for this is because we haven't incorporated with geospatial information.
