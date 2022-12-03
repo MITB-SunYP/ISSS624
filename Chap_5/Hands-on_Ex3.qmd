@@ -810,3 +810,188 @@ qtm(shan_sf_cluster, "CLUSTER")
 ```
 
 We are now able to see where are the 6 clusters on the choropleth map. However, some of the townships are far away from each other although they are from the same cluster which is not good for business decision making. The reason for this is because we haven't incorporated with geospatial information.
+
+## Spatially Constrained Clustering: SKATER approach
+
+In this section, we'll learn how to derive spatially constrained clusters.
+
+### Converting into SpatialPolygonsDataFrame
+
+Let's first convert shan_sf simple feature data frame to SpatialPolygonsDataFrame.
+
+```{r}
+shan_sp <- as_Spatial(shan_sf)
+
+```
+
+### Computing neighbour list
+
+Next, we compute the neighbour list from the polygon list.
+
+```{r}
+shan.nb <- poly2nb(shan_sp)
+summary(shan.nb)
+
+```
+
+Then we plot the neighbour list on top of the community area boundaries.
+
+```{r}
+plot(shan_sp, 
+     border = grey(.5))
+plot(shan.nb, 
+     coordinates(shan_sp), 
+     col = "blue", 
+     add = TRUE)
+
+```
+
+### **Calculating edge costs**
+
+Next, we compute the cost of each edge which is the distance between its nodes.
+
+```{r}
+lcosts <- nbcosts(shan.nb, shan_ict)
+
+```
+
+For each observation, this gives the pairwise dissimilarity between its values on the five variables and the values for the neighbouring observation (from the neighbour list). Basically, this is the notion of a generalised weight for a spatial weights matrix.
+
+Next, We will incorporate these costs into a weight object similar to the calculation of inverse of distance weights.
+
+```{r}
+shan.w <- nb2listw(shan.nb, 
+                   lcosts, 
+                   style = "B")
+summary(shan.w)
+
+```
+
+### Computing minimum spanning tree
+
+Now, let's compute the minimum spanning tree.
+
+```{r}
+shan.mst <- mstree(shan.w)
+
+```
+
+```{r}
+class(shan.mst)
+
+```
+
+The output of the minimum spanning tree is an matrix.
+
+```{r}
+dim(shan.mst)
+
+```
+
+The minimum spanning tree matrix has a dimension of 54 x 3.
+
+Note that the dimension is 54 and not 55. This is because the minimum spanning tree consists on n-1 edges (links) in order to traverse all the nodes.
+
+```{r}
+head(shan.mst)
+
+```
+
+Now, let's plot the minimum spanning tree matrix on the township boundaries.
+
+```{r}
+plot(shan_sp, border = gray(.5))
+plot.mst(shan.mst, 
+         coordinates(shan_sp), 
+         col = "blue", 
+         cex.lab = 0.7, 
+         cex.circles = 0.005, 
+         add = TRUE)
+
+```
+
+The plot is now simplified to have one edge connecting each of the nodes.
+
+### Computing spatially constrained clusters using SKATER method
+
+Now let's compute the spatially constrained clusters.
+
+```{r}
+clust6 <- spdep::skater(edges = shan.mst[, 1:2], 
+                 data = shan_ict, 
+                 method = "euclidean", 
+                 ncuts = 5)
+
+```
+
+Note that ncuts = 6 - 1 = 5 because it is for the cuts in the graph.
+
+```{r}
+str(clust6)
+
+```
+
+We could check the assignment of clusters using groups information provided in the output.
+
+```{r}
+ccs6 <- clust6$groups
+ccs6
+
+```
+
+We could find out the number of townships in each cluster.
+
+```{r}
+table(ccs6)
+
+```
+
+We could also plot the pruned tree that shows the five clusters on top of the township area.
+
+```{r}
+plot(shan_sp, border = gray(.5))
+plot(clust6, 
+     coordinates(shan_sp), 
+     cex.lab = .7,
+     groups.colors=c("red", "green", "blue", "brown", "pink"),
+     cex.circles = 0.005, 
+     add = TRUE)
+
+```
+
+### Visualizing the clusters in choropleth map 
+
+Let's now plot the newly derived clusters using SKATER method.
+
+```{r}
+groups_mat <- as.matrix(clust6$groups)
+shan_sf_spatialcluster <- cbind(shan_sf_cluster, as.factor(groups_mat)) %>%
+  rename(`SP_CLUSTER` = `as.factor.groups_mat.`)
+qtm(shan_sf_spatialcluster, "SP_CLUSTER")
+
+```
+
+We plot the hierarchical clustering and spatially constrained hierarchical clustering side by side to compare the clusters.
+
+```{r}
+hclust.map <- qtm(shan_sf_cluster,
+                  "CLUSTER") + 
+  tm_borders(alpha = 0.5) 
+
+shclust.map <- qtm(shan_sf_spatialcluster,
+                   "SP_CLUSTER") + 
+  tm_borders(alpha = 0.5) 
+
+tmap_arrange(hclust.map, shclust.map,
+             asp = NA, ncol = 2)
+
+```
+
+We could tell that the spatially constrained hierarchical clustering gives a better clustering because the townships within each cluster are connected. This makes it easier for us to make any business interpretations.
+
+### Saving Data for In-class Exercise
+
+```{r}
+write_rds(shan_ict, "data/rds/shan_ict.rds")
+write_rds(shan_sf, "data/rds/shan_sf.rds")
+```
