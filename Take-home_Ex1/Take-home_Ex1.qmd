@@ -13,7 +13,8 @@ In this take-home exercise, we are going to analyze the water point related data
 
 ## Problem Statement
 
--   Apply appropriate global and local measures of spatial association techniques on Nigeria data to study the spatial patterns of Not Functional water points.
+-   Apply global measures of spatial association techniques to study if the Not Functional water points are evenly distributed across Nigeria
+-   Apply local measures of spatial association techniques to study if there are any area having more Not Functional water points
 
 ## Getting Started
 
@@ -144,33 +145,9 @@ list(wp)
 
 ```
 
-We could observe that some string columns contain NA's. Let's recode the NA's into Unknown.
+We could notice that latitude and longitude columns contains decimal values. Hence, it's reasonable to assume they are in WGS 84 Geographic Coordinate System.
 
-```{r}
-#| eval: false
-wp <- wp %>% mutate_at(vars(`#water_source_category`, 
-                            `#water_tech_category`,
-                            `#management_clean`,
-                            `#subjective_quality`),
-                       ~replace_na(., "Unknown"))
-
-```
-
-```{r}
-#| eval: false
-unique(wp$`#water_source_category`)
-#| eval: false
-unique(wp$`#water_tech_category`)
-#| eval: false
-unique(wp$`#management_clean`)
-#| eval: false
-unique(wp$`#subjective_quality`)
-
-```
-
-All the NA's have been recoded into Unknown.
-
-We also could notice that latitude and longitude columns contains decimal values. Hence, it's reasonable to assume they are in WGS 84 Geographic Coordinate System.
+Now, let's convert the data frame into a simple feature data frame.
 
 ```{r}
 #| eval: false
@@ -205,22 +182,7 @@ We can see that this geospatial data is a multipolygon features object. It conta
 
 ## Extracting Information about Non-Functional Water Points
 
-There are a few things we could analyze to understand more about the non-functional water points. Some of the ideas are:
-
--   **Number of non-functional water points** in the regions
-
--   **The source of the water at the non-functional water points.** We could make use of the variable *#water_source_category* which contains the following categories:
-
-    -   Well
-    -   Piped Water
-    -   Spring
-
--   **The technology used at the non-functional water points.** We could make use of the variable *#water_tech_category* which contains the following categories:
-
-    -   Mechanized Pump
-    -   Hand Pump
-    -   Tapstand
-    -   Unknown
+Since we know the status of all the water points, we are able to calculate the total number of water points in each region as well as the non-functional water points. However, the absolute counts might lead us to the biased analysis result because the chance of having more non-functional water points are higher for regions having more water points. Therefore, we'll use the percentage of non-functional water points to understand the distribution.
 
 ### Extracting Non-Functional Water Points
 
@@ -232,85 +194,9 @@ wp_nonfunc <- wp_sf %>% filter(status_n == "Non-functional")
 
 ```
 
-### Extracting Non-Functional Water Points from Different Water Sources
-
-Let's check what are the different water sources for non-functional water points.
-
-```{r}
-#| eval: false
-unique(wp_nonfunc$`#water_source_category`)
-
-```
-
-Next, extract the data of water points using *well* as the water source.
-
-```{r}
-#| eval: false
-wp_s_well <- wp_sf %>% filter(status_n == "Non-functional" & `#water_source_category` == "Well")
-
-```
-
-Next, extract the data of water points using *Piped Water* as the water source.
-
-```{r}
-#| eval: false
-wp_s_pw <- wp_sf %>% filter(status_n == "Non-functional" & `#water_source_category` == "Piped Water")
-
-```
-
-Next, extract the data of water points using *Spring* as the water source.
-
-```{r}
-#| eval: false
-wp_s_spring <- wp_sf %>% filter(status_n == "Non-functional" & `#water_source_category` == "Spring")
-
-```
-
-### Extracting Water Points using Different Technologies
-
-Let's check what are the different technologies used at non-functional water points.
-
-```{r}
-#| eval: false
-unique(wp_nonfunc$`#water_tech_category`)
-
-```
-
-Next, extract the data of water points using *Mechanized Pump*.
-
-```{r}
-#| eval: false
-wp_t_mp <- wp_sf %>% filter(status_n == "Non-functional" & `#water_tech_category` == "Mechanized Pump")
-
-```
-
-Next, extract the data of water points using *Hand Pump*.
-
-```{r}
-#| eval: false
-wp_t_hp <- wp_sf %>% filter(status_n == "Non-functional" & `#water_tech_category` == "Hand Pump")
-
-```
-
-Next, extract the data of water points using *Tapstand*.
-
-```{r}
-#| eval: false
-wp_t_ts <- wp_sf %>% filter(status_n == "Non-functional" & `#water_tech_category` == "Tapstand")
-
-```
-
-Next, extract the data of water points using *Unknown* technology.
-
-```{r}
-#| eval: false
-wp_t_unknown <- wp_sf %>% filter(status_n == "Non-functional" & `#water_tech_category` == "Unknown")
-
-```
-
 ### Perform Point-in-Polygon Count
 
-Let's add the count of the water points into the geospatial data.
+Let's add the count of the total water points and the non-functional water points into the geospatial data.
 
 ```{r}
 #| eval: false
@@ -320,44 +206,16 @@ nga_wp <- nga %>%
   )) %>%
   mutate(wpt_nonfunc = lengths(
     st_intersects(nga, wp_nonfunc)
-  )) %>%
-  mutate(wpt_nonfunc_s_well = lengths(
-    st_intersects(nga, wp_s_well)
-  )) %>%
-  mutate(wpt_nonfunc_s_pipe = lengths(
-    st_intersects(nga, wp_s_pw)
-  )) %>%
-  mutate(wpt_nonfunc_s_spring = lengths(
-    st_intersects(nga, wp_s_spring)
-  )) %>%
-  mutate(wpt_nonfunc_t_mechanical = lengths(
-    st_intersects(nga, wp_t_mp)
-  )) %>%
-  mutate(wpt_nonfunc_t_hand = lengths(
-    st_intersects(nga,wp_t_hp)
-  )) %>%
-  mutate(wpt_nonfunc_t_tap = lengths(
-    st_intersects(nga, wp_t_ts)
-  )) %>%
-  mutate(wpt_nonfunc_t_unknown = lengths(
-    st_intersects(nga, wp_t_unknown)
   ))
 
 ```
 
-Let's also calculate the percentage of non-functional water points, as well as the percentages of different water sources and technologies among non-functional water points.
+Let's also calculate the percentage of non-functional water points.
 
 ```{r}
 #| eval: false
 nga_wp <- nga_wp %>%
-  mutate(wpt_nonfunc_pct = wpt_nonfunc / total_wpt) %>%
-  mutate(wpt_nonfunc_s_well_pct = wpt_nonfunc_s_well / wpt_nonfunc) %>%
-  mutate(wpt_nonfunc_s_pipe_pct = wpt_nonfunc_s_pipe / wpt_nonfunc) %>%
-  mutate(wpt_nonfunc_s_spring_pct = wpt_nonfunc_s_spring / wpt_nonfunc) %>%
-  mutate(wpt_nonfunc_t_mechanical_pct = wpt_nonfunc_t_mechanical / wpt_nonfunc) %>%
-  mutate(wpt_nonfunc_t_hand_pct = wpt_nonfunc_t_hand / wpt_nonfunc) %>%
-  mutate(wpt_nonfunc_t_tap_pct = wpt_nonfunc_t_tap / wpt_nonfunc) %>%
-  mutate(wpt_nonfunc_t_unknown_pct = wpt_nonfunc_t_unknown / wpt_nonfunc)
+  mutate(wpt_nonfunc_pct = wpt_nonfunc / total_wpt)
 
 ```
 
@@ -422,139 +280,139 @@ non_functional_pct <- tm_shape(nga_wp) +
 tmap_arrange(non_functional_count, non_functional_pct, asp=1, ncol=2)
 ```
 
-The plot on the left shows that eastern, central and western Nigeria have higher number of non-functional water points. However, people from southern and north-western parts of Nigeria might be facing a more severe water crisis because the proportion of non-functional water points in those area is high. Hence, it's worthwhile for the Nigeria government to pay attention to the water needs of people in those area.
+The plot on the left shows that eastern, central and western Nigeria have higher number of non-functional water points. However, people from southern and north-western parts of Nigeria might be facing a more severe water crisis because the proportion of non-functional water points in those area is high.
 
-### Visualizing the Water Sources of Non-Functional Water Points
+The plots also tells us that the percentage of non-functional water points is a better indicator to understand the distribution of the non-functional water points.
 
-Next, let's check what are the water sources of the non-functional water points in those area.
+## Global Spatial Autocorrelation
+
+In this section, we'll test if the non-functional water points are evenly distributed across Nigeria by:
+
+-   **Calculating global spatial autocorrelation statistics**
+
+-   **Conducting spatial complete randomness test**
+
+### Computing contiguity spatial weights
+
+We first need to cconstruct the spatial weights matrix to define the neighbourhood relationship among the regions. In this exercise, we will use Queen criteria to define the neighbours.
 
 ```{r}
-non_functional_well <- tm_shape(nga_wp) +
-                          tm_fill("wpt_nonfunc_s_well",
-                                  style = "quantile",
-                                  title = "Count") +
-                          tm_layout(main.title = "Non-Function Water Points Sources: Well (Count)",
-                                    main.title.position = "center",
-                                    main.title.size = 0.6,
-                                    legend.height = 0.3,
-                                    legend.width = 0.4,
-                                    legend.title.size = 0.8,
-                                    legend.text.size = 0.6,
-                                    frame = TRUE) +
-                          tm_borders(alpha = 0.5) +
-                          tm_grid(alpha = 0.2)
+wm_q <- poly2nb(nga_wp, queen = TRUE)
+summary(wm_q)
 
-non_functional_pipe <- tm_shape(nga_wp) +
-                          tm_fill("wpt_nonfunc_s_pipe",
-                                  style = "quantile",
-                                  title = "Count") +
-                          tm_layout(main.title = "Non-Function Water Points Sources: Piped Water (Count)",
-                                    main.title.position = "center",
-                                    main.title.size = 0.6,
-                                    legend.height = 0.3,
-                                    legend.width = 0.4,
-                                    legend.title.size = 0.8,
-                                    legend.text.size = 0.6,
-                                    frame = TRUE) +
-                          tm_borders(alpha = 0.5) +
-                          tm_grid(alpha = 0.2)
+```
 
-non_functional_spring <- tm_shape(nga_wp) +
-                          tm_fill("wpt_nonfunc_s_spring",
-                                  style = "equal",
-                                  title = "Count") +
-                          tm_layout(main.title = "Non-Function Water Points Sources: Spring (Count)",
-                                    main.title.position = "center",
-                                    main.title.size = 0.6,
-                                    legend.height = 0.3,
-                                    legend.width = 0.4,
-                                    legend.title.size = 0.8,
-                                    legend.text.size = 0.6,
-                                    frame = TRUE) +
-                          tm_borders(alpha = 0.5) +
-                          tm_grid(alpha = 0.2)
+The summary report tells us that there are 774 regions in Nigeria, and there is one region without any neighbours. Among the rest of the regions, there are two least connected regions with 1 neighbour each, and 1 most connected region with 14 neighbours.
 
-tmap_arrange(non_functional_well, non_functional_pipe, non_functional_spring, asp=0, ncol=2)
+### Row-standardized weights matrix
+
+Next, we need to assign the weights to each neighbouring region. In this exercise, we assign equal weights to each neighbouring region.
+
+```{r}
+rswm_q <- nb2listw(wm_q, style = "W", zero.policy = TRUE)
+print(rswm_q, zero.policy = TRUE)
+
+```
+
+### Global Spatial Autocorrelation: Moran's I
+
+Now, we are ready to conduct Moran's I statistics test.
+
+**Null hypothesis:** the non-functional water points are randomly disbursed
+
+**Alternative hypothesis:** the non-functional water points are spatially clustered
+
+### Moran's I test
+
+```{r}
+moran.test(nga_wp$wpt_nonfunc_pct, 
+           listw = rswm_q, 
+           zero.policy = TRUE, 
+           na.action = na.omit)
+
+```
+
+The p-value is less than 0.5, and we have enough evidence to reject the null hypothesis at 5% significance level. We are able to conclude that the non-functional water points are spatially clustered.
+
+**Computing Monte Carlo Moran's I**
+
+To test is the Moran's I statistic is significant, we'll perform a permutation test with 1000 simulations.
+
+```{r}
+set.seed(1234)
+bperm = moran.mc(nga_wp$wpt_nonfunc_pct, 
+                 listw = rswm_q, 
+                 nsim = 999, 
+                 zero.policy = TRUE, 
+                 na.action = na.omit)
+bperm
+
+```
+
+The p-value is less than 0.05, and we have enough evidence to reject the null hypothesis at 5% significance level. We could conclude that Moran's I statistic is significant, and the non-functional water points are indeed spatially clustered.
+
+**Visualizing Monte Carlo Moran's I**
+
+We could also plot the simulated Moran's I statistics to analyze its significance.
+
+```{r}
+summary(bperm$res[1:999])
+
+```
+
+The summary report shows that the simulated Moran's I statistic has a mean of -0.001140. The smallest Moran's I statistic is -0.079821. and the largest is 0.084960.
+
+```{r}
+var(bperm$res[1:999])
+
+```
+
+Furthermore, the simulated Moran's I statistic has a variance of 0.000499.
+
+```{r}
+hist(bperm$res, 
+     freq = TRUE, 
+     breaks = 20, 
+     xlab= "Simulated Moran's I")
+abline(v = 0, 
+       col = "red") 
+
+```
+
+The histogram above shows the distribution of Moran's I values we could expect if the non-functional water points are randomly distributed across Nigeria. According to the Moran's I test we performed earlier, the Moran's I statistic is 0.463 which is far away to the right to the histogram. Hence, we could conclude that the Moran's I statistic of 0.463 is significant, and the non-functional water points are spatially clustered.
+
+## Spatial Correlagram
+
+Next, let's check if the non-functional water points rates are correlated at different lags (i.e. distance) based on Moran's I test.
+
+### Computing Moran's I correlogram
+
+Let's compute a 6-lag spatial correlogram of non-functional water points. As NA is not allowed in sp.correlogram function, we'll replace all the NA in wpt_nonfunc_pct variable to 0.
+
+```{r}
+nga_wp <- nga_wp %>% mutate_at(vars(wpt_nonfunc_pct), ~replace_na(., 0))
 
 ```
 
 ```{r}
-table(nga_wp$wpt_nonfunc_s_pipe)
+MI_corr <- sp.correlogram(wm_q, 
+                          nga_wp$wpt_nonfunc_pct, 
+                          order = 6, 
+                          method = "I", 
+                          style = "W",
+                          zero.policy = TRUE)
+plot(MI_corr)
 
 ```
 
-The plots above show that most of the non-functional water points are from well. There is only 1 non-functional water point is piped water. Hence, one way to improve water supply condition in Nigeria is to change the water points to piped water.
-
-### Visualizing the Technologies Used at the Non-Functional Water Points
-
-Next, let's check what are the technologies used at the non-functional water points in those area.
+Let's also check the p values at each lag.
 
 ```{r}
-non_functional_mechanical <- tm_shape(nga_wp) +
-                                tm_fill("wpt_nonfunc_t_mechanical",
-                                        style = "quantile",
-                                        title = "Count") +
-                                tm_layout(main.title = "Non-Function Water Points Technology: Mechanized Pump (Count)",
-                                          main.title.position = "center",
-                                          main.title.size = 0.6,
-                                          legend.height = 0.3,
-                                          legend.width = 0.4,
-                                          legend.title.size = 0.8,
-                                          legend.text.size = 0.6,
-                                          frame = TRUE) +
-                                tm_borders(alpha = 0.5) +
-                                tm_grid(alpha = 0.2)
-
-non_functional_hand <- tm_shape(nga_wp) +
-                          tm_fill("wpt_nonfunc_t_hand",
-                                  style = "quantile",
-                                  title = "Count") +
-                          tm_layout(main.title = "Non-Function Water Points Technology: Hand Pump (Count)",
-                                    main.title.position = "center",
-                                    main.title.size = 0.6,
-                                    legend.height = 0.3,
-                                    legend.width = 0.4,
-                                    legend.title.size = 0.8,
-                                    legend.text.size = 0.6,
-                                    frame = TRUE) +
-                          tm_borders(alpha = 0.5) +
-                          tm_grid(alpha = 0.2)
-
-non_functional_tap <- tm_shape(nga_wp) +
-                          tm_fill("wpt_nonfunc_t_tap",
-                                  style = "equal",
-                                  title = "Count") +
-                          tm_layout(main.title = "Non-Function Water Points Technology: Tapstand (Count)",
-                                    main.title.position = "center",
-                                    main.title.size = 0.6,
-                                    legend.height = 0.3,
-                                    legend.width = 0.4,
-                                    legend.title.size = 0.8,
-                                    legend.text.size = 0.6,
-                                    frame = TRUE) +
-                          tm_borders(alpha = 0.5) +
-                          tm_grid(alpha = 0.2)
-
-non_functional_unknown <- tm_shape(nga_wp) +
-                            tm_fill("wpt_nonfunc_t_unknown",
-                                    style = "equal",
-                                    title = "Count") +
-                            tm_layout(main.title = "Non-Function Water Points Technology: Unknown (Count)",
-                                      main.title.position = "center",
-                                      main.title.size = 0.6,
-                                      legend.height = 0.3,
-                                      legend.width = 0.4,
-                                      legend.title.size = 0.8,
-                                      legend.text.size = 0.6,
-                                      frame = TRUE) +
-                            tm_borders(alpha = 0.5) +
-                            tm_grid(alpha = 0.2)
-
-tmap_arrange(non_functional_mechanical, non_functional_hand, non_functional_tap, non_functional_unknown, asp=0, ncol=2)
+print(MI_corr)
 
 ```
 
-The plots above show that most of the non-functional water points are using mechanized pump or hand pump. Very few of the non-functional water points are using tapstand. Cross referencing with the previous analysis regarding the sources of the non-functional water points, it might be good to replace the non-functional water points with piped water using tapstand.
+The report shows that the p-values at all legs are less than 0.05, and we have enough evidence to conclude that the non-functional water points rates are significantly correlated among nearby neighbours at 5% significance level. This validates our conclusion from the previous section that the non-functional water points are spatially clustered.
 
 Thank you!
 

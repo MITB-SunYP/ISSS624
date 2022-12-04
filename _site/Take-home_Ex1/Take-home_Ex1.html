@@ -215,16 +215,23 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#extracting-information-about-non-functional-water-points" id="toc-extracting-information-about-non-functional-water-points" class="nav-link" data-scroll-target="#extracting-information-about-non-functional-water-points">Extracting Information about Non-Functional Water Points</a>
   <ul class="collapse">
   <li><a href="#extracting-non-functional-water-points" id="toc-extracting-non-functional-water-points" class="nav-link" data-scroll-target="#extracting-non-functional-water-points">Extracting Non-Functional Water Points</a></li>
-  <li><a href="#extracting-non-functional-water-points-from-different-water-sources" id="toc-extracting-non-functional-water-points-from-different-water-sources" class="nav-link" data-scroll-target="#extracting-non-functional-water-points-from-different-water-sources">Extracting Non-Functional Water Points from Different Water Sources</a></li>
-  <li><a href="#extracting-water-points-using-different-technologies" id="toc-extracting-water-points-using-different-technologies" class="nav-link" data-scroll-target="#extracting-water-points-using-different-technologies">Extracting Water Points using Different Technologies</a></li>
   <li><a href="#perform-point-in-polygon-count" id="toc-perform-point-in-polygon-count" class="nav-link" data-scroll-target="#perform-point-in-polygon-count">Perform Point-in-Polygon Count</a></li>
   <li><a href="#saving-the-analytical-data-table" id="toc-saving-the-analytical-data-table" class="nav-link" data-scroll-target="#saving-the-analytical-data-table">Saving the Analytical Data Table</a></li>
   </ul></li>
   <li><a href="#visualizing-the-spatial-distribution-of-water-points" id="toc-visualizing-the-spatial-distribution-of-water-points" class="nav-link" data-scroll-target="#visualizing-the-spatial-distribution-of-water-points">Visualizing the Spatial Distribution of Water Points</a>
   <ul class="collapse">
   <li><a href="#visualizing-non-functional-water-points" id="toc-visualizing-non-functional-water-points" class="nav-link" data-scroll-target="#visualizing-non-functional-water-points">Visualizing Non-Functional Water Points</a></li>
-  <li><a href="#visualizing-the-water-sources-of-non-functional-water-points" id="toc-visualizing-the-water-sources-of-non-functional-water-points" class="nav-link" data-scroll-target="#visualizing-the-water-sources-of-non-functional-water-points">Visualizing the Water Sources of Non-Functional Water Points</a></li>
-  <li><a href="#visualizing-the-technologies-used-at-the-non-functional-water-points" id="toc-visualizing-the-technologies-used-at-the-non-functional-water-points" class="nav-link" data-scroll-target="#visualizing-the-technologies-used-at-the-non-functional-water-points">Visualizing the Technologies Used at the Non-Functional Water Points</a></li>
+  </ul></li>
+  <li><a href="#global-spatial-autocorrelation" id="toc-global-spatial-autocorrelation" class="nav-link" data-scroll-target="#global-spatial-autocorrelation">Global Spatial Autocorrelation</a>
+  <ul class="collapse">
+  <li><a href="#computing-contiguity-spatial-weights" id="toc-computing-contiguity-spatial-weights" class="nav-link" data-scroll-target="#computing-contiguity-spatial-weights">Computing contiguity spatial weights</a></li>
+  <li><a href="#row-standardized-weights-matrix" id="toc-row-standardized-weights-matrix" class="nav-link" data-scroll-target="#row-standardized-weights-matrix">Row-standardized weights matrix</a></li>
+  <li><a href="#global-spatial-autocorrelation-morans-i" id="toc-global-spatial-autocorrelation-morans-i" class="nav-link" data-scroll-target="#global-spatial-autocorrelation-morans-i">Global Spatial Autocorrelation: Moran’s I</a></li>
+  <li><a href="#morans-i-test" id="toc-morans-i-test" class="nav-link" data-scroll-target="#morans-i-test">Moran’s I test</a></li>
+  </ul></li>
+  <li><a href="#spatial-correlagram" id="toc-spatial-correlagram" class="nav-link" data-scroll-target="#spatial-correlagram">Spatial Correlagram</a>
+  <ul class="collapse">
+  <li><a href="#computing-morans-i-correlogram" id="toc-computing-morans-i-correlogram" class="nav-link" data-scroll-target="#computing-morans-i-correlogram">Computing Moran’s I correlogram</a></li>
   </ul></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
   </ul>
@@ -258,7 +265,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section id="problem-statement" class="level2">
 <h2 class="anchored" data-anchor-id="problem-statement">Problem Statement</h2>
 <ul>
-<li>Apply appropriate global and local measures of spatial association techniques on Nigeria data to study the spatial patterns of Not Functional water points.</li>
+<li>Apply global measures of spatial association techniques to study if the Not Functional water points are evenly distributed across Nigeria</li>
+<li>Apply local measures of spatial association techniques to study if there are any area having more Not Functional water points</li>
 </ul>
 </section>
 <section id="getting-started" class="level2">
@@ -349,163 +357,60 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(wp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>We could observe that some string columns contain NA’s. Let’s recode the NA’s into Unknown.</p>
+<p>We could notice that latitude and longitude columns contains decimal values. Hence, it’s reasonable to assume they are in WGS 84 Geographic Coordinate System.</p>
+<p>Now, let’s convert the data frame into a simple feature data frame.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>wp <span class="ot">&lt;-</span> wp <span class="sc">%&gt;%</span> <span class="fu">mutate_at</span>(<span class="fu">vars</span>(<span class="st">`</span><span class="at">#water_source_category</span><span class="st">`</span>, </span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>                            <span class="st">`</span><span class="at">#water_tech_category</span><span class="st">`</span>,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                            <span class="st">`</span><span class="at">#management_clean</span><span class="st">`</span>,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                            <span class="st">`</span><span class="at">#subjective_quality</span><span class="st">`</span>),</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                       <span class="sc">~</span><span class="fu">replace_na</span>(., <span class="st">"Unknown"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(wp<span class="sc">$</span><span class="st">`</span><span class="at">#water_source_category</span><span class="st">`</span>)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(wp<span class="sc">$</span><span class="st">`</span><span class="at">#water_tech_category</span><span class="st">`</span>)</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(wp<span class="sc">$</span><span class="st">`</span><span class="at">#management_clean</span><span class="st">`</span>)</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(wp<span class="sc">$</span><span class="st">`</span><span class="at">#subjective_quality</span><span class="st">`</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>All the NA’s have been recoded into Unknown.</p>
-<p>We also could notice that latitude and longitude columns contains decimal values. Hence, it’s reasonable to assume they are in WGS 84 Geographic Coordinate System.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>wp_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(wp,</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"#lon_deg"</span>, <span class="st">"#lat_deg"</span>),</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">crs =</span> <span class="dv">4326</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>wp_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(wp,</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"#lon_deg"</span>, <span class="st">"#lat_deg"</span>),</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">crs =</span> <span class="dv">4326</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Let’s take a look at the new simple feature data frame.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(wp_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(wp_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We have a new column, <em>geometry</em>, added into the simple feature data frame. The original latitude and longitude columns have been dropped.</p>
 <p><strong>Geospatial Data</strong></p>
 <p>Next, let’s import the geospatial data into R as a polygon feature data.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>nga <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"Data/geoBoundaries-NGA-ADM2-all"</span>,</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">layer =</span> <span class="st">"geoBoundaries-NGA-ADM2"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>nga <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"Data/geoBoundaries-NGA-ADM2-all"</span>,</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">layer =</span> <span class="st">"geoBoundaries-NGA-ADM2"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We can see that this geospatial data is a multipolygon features object. It contains 774 multipolygon features and 5 fields. It is in WGS 84 coordinates system, and the bounding box provides the x and y extends of the data.</p>
 </section>
 </section>
 <section id="extracting-information-about-non-functional-water-points" class="level2">
 <h2 class="anchored" data-anchor-id="extracting-information-about-non-functional-water-points">Extracting Information about Non-Functional Water Points</h2>
-<p>There are a few things we could analyze to understand more about the non-functional water points. Some of the ideas are:</p>
-<ul>
-<li><p><strong>Number of non-functional water points</strong> in the regions</p></li>
-<li><p><strong>The source of the water at the non-functional water points.</strong> We could make use of the variable <em>#water_source_category</em> which contains the following categories:</p>
-<ul>
-<li>Well</li>
-<li>Piped Water</li>
-<li>Spring</li>
-</ul></li>
-<li><p><strong>The technology used at the non-functional water points.</strong> We could make use of the variable <em>#water_tech_category</em> which contains the following categories:</p>
-<ul>
-<li>Mechanized Pump</li>
-<li>Hand Pump</li>
-<li>Tapstand</li>
-<li>Unknown</li>
-</ul></li>
-</ul>
+<p>Since we know the status of all the water points, we are able to calculate the total number of water points in each region as well as the non-functional water points. However, the absolute counts might lead us to the biased analysis result because the chance of having more non-functional water points are higher for regions having more water points. Therefore, we’ll use the percentage of non-functional water points to understand the distribution.</p>
 <section id="extracting-non-functional-water-points" class="level3">
 <h3 class="anchored" data-anchor-id="extracting-non-functional-water-points">Extracting Non-Functional Water Points</h3>
 <p>Let’s extract the data of non-functional water points.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>wp_nonfunc <span class="ot">&lt;-</span> wp_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(status_n <span class="sc">==</span> <span class="st">"Non-functional"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="extracting-non-functional-water-points-from-different-water-sources" class="level3">
-<h3 class="anchored" data-anchor-id="extracting-non-functional-water-points-from-different-water-sources">Extracting Non-Functional Water Points from Different Water Sources</h3>
-<p>Let’s check what are the different water sources for non-functional water points.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(wp_nonfunc<span class="sc">$</span><span class="st">`</span><span class="at">#water_source_category</span><span class="st">`</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Next, extract the data of water points using <em>well</em> as the water source.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>wp_s_well <span class="ot">&lt;-</span> wp_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(status_n <span class="sc">==</span> <span class="st">"Non-functional"</span> <span class="sc">&amp;</span> <span class="st">`</span><span class="at">#water_source_category</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Well"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Next, extract the data of water points using <em>Piped Water</em> as the water source.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>wp_s_pw <span class="ot">&lt;-</span> wp_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(status_n <span class="sc">==</span> <span class="st">"Non-functional"</span> <span class="sc">&amp;</span> <span class="st">`</span><span class="at">#water_source_category</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Piped Water"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Next, extract the data of water points using <em>Spring</em> as the water source.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>wp_s_spring <span class="ot">&lt;-</span> wp_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(status_n <span class="sc">==</span> <span class="st">"Non-functional"</span> <span class="sc">&amp;</span> <span class="st">`</span><span class="at">#water_source_category</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Spring"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="extracting-water-points-using-different-technologies" class="level3">
-<h3 class="anchored" data-anchor-id="extracting-water-points-using-different-technologies">Extracting Water Points using Different Technologies</h3>
-<p>Let’s check what are the different technologies used at non-functional water points.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(wp_nonfunc<span class="sc">$</span><span class="st">`</span><span class="at">#water_tech_category</span><span class="st">`</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Next, extract the data of water points using <em>Mechanized Pump</em>.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>wp_t_mp <span class="ot">&lt;-</span> wp_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(status_n <span class="sc">==</span> <span class="st">"Non-functional"</span> <span class="sc">&amp;</span> <span class="st">`</span><span class="at">#water_tech_category</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Mechanized Pump"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Next, extract the data of water points using <em>Hand Pump</em>.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>wp_t_hp <span class="ot">&lt;-</span> wp_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(status_n <span class="sc">==</span> <span class="st">"Non-functional"</span> <span class="sc">&amp;</span> <span class="st">`</span><span class="at">#water_tech_category</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Hand Pump"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Next, extract the data of water points using <em>Tapstand</em>.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>wp_t_ts <span class="ot">&lt;-</span> wp_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(status_n <span class="sc">==</span> <span class="st">"Non-functional"</span> <span class="sc">&amp;</span> <span class="st">`</span><span class="at">#water_tech_category</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Tapstand"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Next, extract the data of water points using <em>Unknown</em> technology.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>wp_t_unknown <span class="ot">&lt;-</span> wp_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(status_n <span class="sc">==</span> <span class="st">"Non-functional"</span> <span class="sc">&amp;</span> <span class="st">`</span><span class="at">#water_tech_category</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Unknown"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>wp_nonfunc <span class="ot">&lt;-</span> wp_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(status_n <span class="sc">==</span> <span class="st">"Non-functional"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="perform-point-in-polygon-count" class="level3">
 <h3 class="anchored" data-anchor-id="perform-point-in-polygon-count">Perform Point-in-Polygon Count</h3>
-<p>Let’s add the count of the water points into the geospatial data.</p>
+<p>Let’s add the count of the total water points and the non-functional water points into the geospatial data.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>nga_wp <span class="ot">&lt;-</span> nga <span class="sc">%&gt;%</span> </span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">total_wpt =</span> <span class="fu">lengths</span>(</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_sf)</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc =</span> <span class="fu">lengths</span>(</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_nonfunc)</span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc_s_well =</span> <span class="fu">lengths</span>(</span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_s_well)</span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc_s_pipe =</span> <span class="fu">lengths</span>(</span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_s_pw)</span>
-<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
-<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc_s_spring =</span> <span class="fu">lengths</span>(</span>
-<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_s_spring)</span>
-<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
-<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc_t_mechanical =</span> <span class="fu">lengths</span>(</span>
-<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_t_mp)</span>
-<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
-<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc_t_hand =</span> <span class="fu">lengths</span>(</span>
-<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga,wp_t_hp)</span>
-<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
-<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc_t_tap =</span> <span class="fu">lengths</span>(</span>
-<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_t_ts)</span>
-<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
-<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc_t_unknown =</span> <span class="fu">lengths</span>(</span>
-<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_t_unknown)</span>
-<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a>  ))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>nga_wp <span class="ot">&lt;-</span> nga <span class="sc">%&gt;%</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">total_wpt =</span> <span class="fu">lengths</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_sf)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc =</span> <span class="fu">lengths</span>(</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_intersects</span>(nga, wp_nonfunc)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  ))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Let’s also calculate the percentage of non-functional water points, as well as the percentages of different water sources and technologies among non-functional water points.</p>
+<p>Let’s also calculate the percentage of non-functional water points.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>nga_wp <span class="ot">&lt;-</span> nga_wp <span class="sc">%&gt;%</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc_pct =</span> wpt_nonfunc <span class="sc">/</span> total_wpt) <span class="sc">%&gt;%</span></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc_s_well_pct =</span> wpt_nonfunc_s_well <span class="sc">/</span> wpt_nonfunc) <span class="sc">%&gt;%</span></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc_s_pipe_pct =</span> wpt_nonfunc_s_pipe <span class="sc">/</span> wpt_nonfunc) <span class="sc">%&gt;%</span></span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc_s_spring_pct =</span> wpt_nonfunc_s_spring <span class="sc">/</span> wpt_nonfunc) <span class="sc">%&gt;%</span></span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc_t_mechanical_pct =</span> wpt_nonfunc_t_mechanical <span class="sc">/</span> wpt_nonfunc) <span class="sc">%&gt;%</span></span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc_t_hand_pct =</span> wpt_nonfunc_t_hand <span class="sc">/</span> wpt_nonfunc) <span class="sc">%&gt;%</span></span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc_t_tap_pct =</span> wpt_nonfunc_t_tap <span class="sc">/</span> wpt_nonfunc) <span class="sc">%&gt;%</span></span>
-<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc_t_unknown_pct =</span> wpt_nonfunc_t_unknown <span class="sc">/</span> wpt_nonfunc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>nga_wp <span class="ot">&lt;-</span> nga_wp <span class="sc">%&gt;%</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">wpt_nonfunc_pct =</span> wpt_nonfunc <span class="sc">/</span> total_wpt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="saving-the-analytical-data-table" class="level3">
 <h3 class="anchored" data-anchor-id="saving-the-analytical-data-table">Saving the Analytical Data Table</h3>
 <p>Now we have prepared the analytical data table. Let’s save the simple feature data table into rds format.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(nga_wp, <span class="st">"Data/nga_wp.rds"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(nga_wp, <span class="st">"Data/nga_wp.rds"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We could now again clear the R environment and release the unused memory.</p>
 </section>
@@ -514,185 +419,239 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h2 class="anchored" data-anchor-id="visualizing-the-spatial-distribution-of-water-points">Visualizing the Spatial Distribution of Water Points</h2>
 <p>Let’s first import the analytical data back into R.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>nga_wp <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"Data/nga_wp.rds"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>nga_wp <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"Data/nga_wp.rds"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="visualizing-non-functional-water-points" class="level3">
 <h3 class="anchored" data-anchor-id="visualizing-non-functional-water-points">Visualizing Non-Functional Water Points</h3>
 <p>Let’s take a look at the distribution of the non-functional water points in Nigeria.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>non_functional_count <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(nga_wp) <span class="sc">+</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_fill</span>(<span class="st">"wpt_nonfunc"</span>,</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">style =</span> <span class="st">"quantile"</span>,</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">title =</span> <span class="st">"Count"</span>) <span class="sc">+</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Distribution of Non-Function Water Points in Nigeria (Count)"</span>,</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.position =</span> <span class="st">"center"</span>,</span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.size =</span> <span class="fl">0.8</span>,</span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.height =</span> <span class="fl">0.3</span>,</span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.width =</span> <span class="fl">0.2</span>,</span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.title.size =</span> <span class="fl">0.8</span>,</span>
-<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.text.size =</span> <span class="fl">0.4</span>,</span>
-<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">frame =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
-<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_scale_bar</span>() <span class="sc">+</span></span>
-<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_grid</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>)</span>
-<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>non_functional_pct <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(nga_wp) <span class="sc">+</span></span>
-<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_fill</span>(<span class="st">"wpt_nonfunc_pct"</span>,</span>
-<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">style =</span> <span class="st">"quantile"</span>,</span>
-<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">title =</span> <span class="st">"Percentage"</span>) <span class="sc">+</span></span>
-<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Distribution of Non-Function Water Points in Nigeria (%)"</span>,</span>
-<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.position =</span> <span class="st">"center"</span>,</span>
-<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.size =</span> <span class="fl">0.8</span>,</span>
-<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.height =</span> <span class="fl">0.3</span>,</span>
-<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.width =</span> <span class="fl">0.2</span>,</span>
-<span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.title.size =</span> <span class="fl">0.8</span>,</span>
-<span id="cb29-27"><a href="#cb29-27" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.text.size =</span> <span class="fl">0.4</span>,</span>
-<span id="cb29-28"><a href="#cb29-28" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">frame =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
-<span id="cb29-29"><a href="#cb29-29" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb29-30"><a href="#cb29-30" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_scale_bar</span>() <span class="sc">+</span></span>
-<span id="cb29-31"><a href="#cb29-31" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_grid</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>)</span>
-<span id="cb29-32"><a href="#cb29-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-33"><a href="#cb29-33" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(non_functional_count, non_functional_pct, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>non_functional_count <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(nga_wp) <span class="sc">+</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_fill</span>(<span class="st">"wpt_nonfunc"</span>,</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">style =</span> <span class="st">"quantile"</span>,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">title =</span> <span class="st">"Count"</span>) <span class="sc">+</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Distribution of Non-Function Water Points in Nigeria (Count)"</span>,</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.position =</span> <span class="st">"center"</span>,</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.size =</span> <span class="fl">0.8</span>,</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.height =</span> <span class="fl">0.3</span>,</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.width =</span> <span class="fl">0.2</span>,</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.title.size =</span> <span class="fl">0.8</span>,</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.text.size =</span> <span class="fl">0.4</span>,</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">frame =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_scale_bar</span>() <span class="sc">+</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_grid</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>)</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>non_functional_pct <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(nga_wp) <span class="sc">+</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_fill</span>(<span class="st">"wpt_nonfunc_pct"</span>,</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">style =</span> <span class="st">"quantile"</span>,</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">title =</span> <span class="st">"Percentage"</span>) <span class="sc">+</span></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Distribution of Non-Function Water Points in Nigeria (%)"</span>,</span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.position =</span> <span class="st">"center"</span>,</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.size =</span> <span class="fl">0.8</span>,</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.height =</span> <span class="fl">0.3</span>,</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.width =</span> <span class="fl">0.2</span>,</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.title.size =</span> <span class="fl">0.8</span>,</span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.text.size =</span> <span class="fl">0.4</span>,</span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">frame =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_scale_bar</span>() <span class="sc">+</span></span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_grid</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>)</span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(non_functional_count, non_functional_pct, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="Take-home_Ex1_files/figure-html/unnamed-chunk-29-1.png" class="img-fluid" width="672"></p>
+<p><img src="Take-home_Ex1_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<p>The plot on the left shows that eastern, central and western Nigeria have higher number of non-functional water points. However, people from southern and north-western parts of Nigeria might be facing a more severe water crisis because the proportion of non-functional water points in those area is high. Hence, it’s worthwhile for the Nigeria government to pay attention to the water needs of people in those area.</p>
+<p>The plot on the left shows that eastern, central and western Nigeria have higher number of non-functional water points. However, people from southern and north-western parts of Nigeria might be facing a more severe water crisis because the proportion of non-functional water points in those area is high.</p>
+<p>The plots also tells us that the percentage of non-functional water points is a better indicator to understand the distribution of the non-functional water points.</p>
 </section>
-<section id="visualizing-the-water-sources-of-non-functional-water-points" class="level3">
-<h3 class="anchored" data-anchor-id="visualizing-the-water-sources-of-non-functional-water-points">Visualizing the Water Sources of Non-Functional Water Points</h3>
-<p>Next, let’s check what are the water sources of the non-functional water points in those area.</p>
+</section>
+<section id="global-spatial-autocorrelation" class="level2">
+<h2 class="anchored" data-anchor-id="global-spatial-autocorrelation">Global Spatial Autocorrelation</h2>
+<p>In this section, we’ll test if the non-functional water points are evenly distributed across Nigeria by:</p>
+<ul>
+<li><p><strong>Calculating global spatial autocorrelation statistics</strong></p></li>
+<li><p><strong>Conducting spatial complete randomness test</strong></p></li>
+</ul>
+<section id="computing-contiguity-spatial-weights" class="level3">
+<h3 class="anchored" data-anchor-id="computing-contiguity-spatial-weights">Computing contiguity spatial weights</h3>
+<p>We first need to cconstruct the spatial weights matrix to define the neighbourhood relationship among the regions. In this exercise, we will use Queen criteria to define the neighbours.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>non_functional_well <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(nga_wp) <span class="sc">+</span></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_fill</span>(<span class="st">"wpt_nonfunc_s_well"</span>,</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">style =</span> <span class="st">"quantile"</span>,</span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">title =</span> <span class="st">"Count"</span>) <span class="sc">+</span></span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Non-Function Water Points Sources: Well (Count)"</span>,</span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.position =</span> <span class="st">"center"</span>,</span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.size =</span> <span class="fl">0.6</span>,</span>
-<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.height =</span> <span class="fl">0.3</span>,</span>
-<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.width =</span> <span class="fl">0.4</span>,</span>
-<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.title.size =</span> <span class="fl">0.8</span>,</span>
-<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.text.size =</span> <span class="fl">0.6</span>,</span>
-<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">frame =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
-<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_grid</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>)</span>
-<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>non_functional_pipe <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(nga_wp) <span class="sc">+</span></span>
-<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_fill</span>(<span class="st">"wpt_nonfunc_s_pipe"</span>,</span>
-<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">style =</span> <span class="st">"quantile"</span>,</span>
-<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">title =</span> <span class="st">"Count"</span>) <span class="sc">+</span></span>
-<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Non-Function Water Points Sources: Piped Water (Count)"</span>,</span>
-<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.position =</span> <span class="st">"center"</span>,</span>
-<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.size =</span> <span class="fl">0.6</span>,</span>
-<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.height =</span> <span class="fl">0.3</span>,</span>
-<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.width =</span> <span class="fl">0.4</span>,</span>
-<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.title.size =</span> <span class="fl">0.8</span>,</span>
-<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.text.size =</span> <span class="fl">0.6</span>,</span>
-<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">frame =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
-<span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb30-29"><a href="#cb30-29" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_grid</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>)</span>
-<span id="cb30-30"><a href="#cb30-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-31"><a href="#cb30-31" aria-hidden="true" tabindex="-1"></a>non_functional_spring <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(nga_wp) <span class="sc">+</span></span>
-<span id="cb30-32"><a href="#cb30-32" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_fill</span>(<span class="st">"wpt_nonfunc_s_spring"</span>,</span>
-<span id="cb30-33"><a href="#cb30-33" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">style =</span> <span class="st">"equal"</span>,</span>
-<span id="cb30-34"><a href="#cb30-34" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">title =</span> <span class="st">"Count"</span>) <span class="sc">+</span></span>
-<span id="cb30-35"><a href="#cb30-35" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Non-Function Water Points Sources: Spring (Count)"</span>,</span>
-<span id="cb30-36"><a href="#cb30-36" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.position =</span> <span class="st">"center"</span>,</span>
-<span id="cb30-37"><a href="#cb30-37" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.size =</span> <span class="fl">0.6</span>,</span>
-<span id="cb30-38"><a href="#cb30-38" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.height =</span> <span class="fl">0.3</span>,</span>
-<span id="cb30-39"><a href="#cb30-39" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.width =</span> <span class="fl">0.4</span>,</span>
-<span id="cb30-40"><a href="#cb30-40" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.title.size =</span> <span class="fl">0.8</span>,</span>
-<span id="cb30-41"><a href="#cb30-41" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.text.size =</span> <span class="fl">0.6</span>,</span>
-<span id="cb30-42"><a href="#cb30-42" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">frame =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
-<span id="cb30-43"><a href="#cb30-43" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb30-44"><a href="#cb30-44" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_grid</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>)</span>
-<span id="cb30-45"><a href="#cb30-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-46"><a href="#cb30-46" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(non_functional_well, non_functional_pipe, non_functional_spring, <span class="at">asp=</span><span class="dv">0</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="Take-home_Ex1_files/figure-html/unnamed-chunk-30-1.png" class="img-fluid" width="672"></p>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>wm_q <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(nga_wp, <span class="at">queen =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm_q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Neighbour list object:
+Number of regions: 774 
+Number of nonzero links: 4440 
+Percentage nonzero weights: 0.7411414 
+Average number of links: 5.736434 
+1 region with no links:
+86
+Link number distribution:
+
+  0   1   2   3   4   5   6   7   8   9  10  11  12  14 
+  1   2  14  57 125 182 140 122  72  41  12   4   1   1 
+2 least connected regions:
+138 560 with 1 link
+1 most connected region:
+508 with 14 links</code></pre>
 </div>
 </div>
+<p>The summary report tells us that there are 774 regions in Nigeria, and there is one region without any neighbours. Among the rest of the regions, there are two least connected regions with 1 neighbour each, and 1 most connected region with 14 neighbours.</p>
+</section>
+<section id="row-standardized-weights-matrix" class="level3">
+<h3 class="anchored" data-anchor-id="row-standardized-weights-matrix">Row-standardized weights matrix</h3>
+<p>Next, we need to assign the weights to each neighbouring region. In this exercise, we assign equal weights to each neighbouring region.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nga_wp<span class="sc">$</span>wpt_nonfunc_s_pipe)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>rswm_q <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_q, <span class="at">style =</span> <span class="st">"W"</span>, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(rswm_q, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Characteristics of weights list object:
+Neighbour list object:
+Number of regions: 774 
+Number of nonzero links: 4440 
+Percentage nonzero weights: 0.7411414 
+Average number of links: 5.736434 
+1 region with no links:
+86
+
+Weights style: W 
+Weights constants summary:
+    n     nn  S0       S1       S2
+W 773 597529 773 285.0658 3198.414</code></pre>
+</div>
+</div>
+</section>
+<section id="global-spatial-autocorrelation-morans-i" class="level3">
+<h3 class="anchored" data-anchor-id="global-spatial-autocorrelation-morans-i">Global Spatial Autocorrelation: Moran’s I</h3>
+<p>Now, we are ready to conduct Moran’s I statistics test.</p>
+<p><strong>Null hypothesis:</strong> the non-functional water points are randomly disbursed</p>
+<p><strong>Alternative hypothesis:</strong> the non-functional water points are spatially clustered</p>
+</section>
+<section id="morans-i-test" class="level3">
+<h3 class="anchored" data-anchor-id="morans-i-test">Moran’s I test</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">moran.test</span>(nga_wp<span class="sc">$</span>wpt_nonfunc_pct, </span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">listw =</span> rswm_q, </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">zero.policy =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">na.action =</span> na.omit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
-  0   1 
-773   1 </code></pre>
+    Moran I test under randomisation
+
+data:  nga_wp$wpt_nonfunc_pct  
+weights: rswm_q 
+omitted: 3, 86, 241, 250, 252, 261, 400, 406, 447, 473, 492, 507, 526   
+
+Moran I statistic standard deviate = 21.027, p-value &lt; 2.2e-16
+alternative hypothesis: greater
+sample estimates:
+Moran I statistic       Expectation          Variance 
+     0.4628161249     -0.0013157895      0.0004872151 </code></pre>
 </div>
 </div>
-<p>The plots above show that most of the non-functional water points are from well. There is only 1 non-functional water point is piped water. Hence, one way to improve water supply condition in Nigeria is to change the water points to piped water.</p>
-</section>
-<section id="visualizing-the-technologies-used-at-the-non-functional-water-points" class="level3">
-<h3 class="anchored" data-anchor-id="visualizing-the-technologies-used-at-the-non-functional-water-points">Visualizing the Technologies Used at the Non-Functional Water Points</h3>
-<p>Next, let’s check what are the technologies used at the non-functional water points in those area.</p>
+<p>The p-value is less than 0.5, and we have enough evidence to reject the null hypothesis at 5% significance level. We are able to conclude that the non-functional water points are spatially clustered.</p>
+<p><strong>Computing Monte Carlo Moran’s I</strong></p>
+<p>To test is the Moran’s I statistic is significant, we’ll perform a permutation test with 1000 simulations.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>non_functional_mechanical <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(nga_wp) <span class="sc">+</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">tm_fill</span>(<span class="st">"wpt_nonfunc_t_mechanical"</span>,</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">style =</span> <span class="st">"quantile"</span>,</span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">title =</span> <span class="st">"Count"</span>) <span class="sc">+</span></span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Non-Function Water Points Technology: Mechanized Pump (Count)"</span>,</span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>                                          <span class="at">main.title.position =</span> <span class="st">"center"</span>,</span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>                                          <span class="at">main.title.size =</span> <span class="fl">0.6</span>,</span>
-<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>                                          <span class="at">legend.height =</span> <span class="fl">0.3</span>,</span>
-<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>                                          <span class="at">legend.width =</span> <span class="fl">0.4</span>,</span>
-<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>                                          <span class="at">legend.title.size =</span> <span class="fl">0.8</span>,</span>
-<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>                                          <span class="at">legend.text.size =</span> <span class="fl">0.6</span>,</span>
-<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>                                          <span class="at">frame =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
-<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">tm_grid</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>)</span>
-<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>non_functional_hand <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(nga_wp) <span class="sc">+</span></span>
-<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_fill</span>(<span class="st">"wpt_nonfunc_t_hand"</span>,</span>
-<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">style =</span> <span class="st">"quantile"</span>,</span>
-<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">title =</span> <span class="st">"Count"</span>) <span class="sc">+</span></span>
-<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Non-Function Water Points Technology: Hand Pump (Count)"</span>,</span>
-<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.position =</span> <span class="st">"center"</span>,</span>
-<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.size =</span> <span class="fl">0.6</span>,</span>
-<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.height =</span> <span class="fl">0.3</span>,</span>
-<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.width =</span> <span class="fl">0.4</span>,</span>
-<span id="cb33-25"><a href="#cb33-25" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.title.size =</span> <span class="fl">0.8</span>,</span>
-<span id="cb33-26"><a href="#cb33-26" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.text.size =</span> <span class="fl">0.6</span>,</span>
-<span id="cb33-27"><a href="#cb33-27" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">frame =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
-<span id="cb33-28"><a href="#cb33-28" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb33-29"><a href="#cb33-29" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_grid</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>)</span>
-<span id="cb33-30"><a href="#cb33-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-31"><a href="#cb33-31" aria-hidden="true" tabindex="-1"></a>non_functional_tap <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(nga_wp) <span class="sc">+</span></span>
-<span id="cb33-32"><a href="#cb33-32" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_fill</span>(<span class="st">"wpt_nonfunc_t_tap"</span>,</span>
-<span id="cb33-33"><a href="#cb33-33" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">style =</span> <span class="st">"equal"</span>,</span>
-<span id="cb33-34"><a href="#cb33-34" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">title =</span> <span class="st">"Count"</span>) <span class="sc">+</span></span>
-<span id="cb33-35"><a href="#cb33-35" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Non-Function Water Points Technology: Tapstand (Count)"</span>,</span>
-<span id="cb33-36"><a href="#cb33-36" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.position =</span> <span class="st">"center"</span>,</span>
-<span id="cb33-37"><a href="#cb33-37" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">main.title.size =</span> <span class="fl">0.6</span>,</span>
-<span id="cb33-38"><a href="#cb33-38" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.height =</span> <span class="fl">0.3</span>,</span>
-<span id="cb33-39"><a href="#cb33-39" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.width =</span> <span class="fl">0.4</span>,</span>
-<span id="cb33-40"><a href="#cb33-40" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.title.size =</span> <span class="fl">0.8</span>,</span>
-<span id="cb33-41"><a href="#cb33-41" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">legend.text.size =</span> <span class="fl">0.6</span>,</span>
-<span id="cb33-42"><a href="#cb33-42" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">frame =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
-<span id="cb33-43"><a href="#cb33-43" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb33-44"><a href="#cb33-44" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tm_grid</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>)</span>
-<span id="cb33-45"><a href="#cb33-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-46"><a href="#cb33-46" aria-hidden="true" tabindex="-1"></a>non_functional_unknown <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(nga_wp) <span class="sc">+</span></span>
-<span id="cb33-47"><a href="#cb33-47" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">tm_fill</span>(<span class="st">"wpt_nonfunc_t_unknown"</span>,</span>
-<span id="cb33-48"><a href="#cb33-48" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">style =</span> <span class="st">"equal"</span>,</span>
-<span id="cb33-49"><a href="#cb33-49" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">title =</span> <span class="st">"Count"</span>) <span class="sc">+</span></span>
-<span id="cb33-50"><a href="#cb33-50" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Non-Function Water Points Technology: Unknown (Count)"</span>,</span>
-<span id="cb33-51"><a href="#cb33-51" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">main.title.position =</span> <span class="st">"center"</span>,</span>
-<span id="cb33-52"><a href="#cb33-52" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">main.title.size =</span> <span class="fl">0.6</span>,</span>
-<span id="cb33-53"><a href="#cb33-53" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">legend.height =</span> <span class="fl">0.3</span>,</span>
-<span id="cb33-54"><a href="#cb33-54" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">legend.width =</span> <span class="fl">0.4</span>,</span>
-<span id="cb33-55"><a href="#cb33-55" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">legend.title.size =</span> <span class="fl">0.8</span>,</span>
-<span id="cb33-56"><a href="#cb33-56" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">legend.text.size =</span> <span class="fl">0.6</span>,</span>
-<span id="cb33-57"><a href="#cb33-57" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">frame =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
-<span id="cb33-58"><a href="#cb33-58" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb33-59"><a href="#cb33-59" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">tm_grid</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>)</span>
-<span id="cb33-60"><a href="#cb33-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-61"><a href="#cb33-61" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(non_functional_mechanical, non_functional_hand, non_functional_tap, non_functional_unknown, <span class="at">asp=</span><span class="dv">0</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>bperm <span class="ot">=</span> <span class="fu">moran.mc</span>(nga_wp<span class="sc">$</span>wpt_nonfunc_pct, </span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">listw =</span> rswm_q, </span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">nsim =</span> <span class="dv">999</span>, </span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">zero.policy =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>                 <span class="at">na.action =</span> na.omit)</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>bperm</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Monte-Carlo simulation of Moran I
+
+data:  nga_wp$wpt_nonfunc_pct 
+weights: rswm_q 
+omitted: 3, 86, 241, 250, 252, 261, 400, 406, 447, 473, 492, 507, 526 
+number of simulations + 1: 1000 
+
+statistic = 0.46221, observed rank = 1000, p-value = 0.001
+alternative hypothesis: greater</code></pre>
+</div>
+</div>
+<p>The p-value is less than 0.05, and we have enough evidence to reject the null hypothesis at 5% significance level. We could conclude that Moran’s I statistic is significant, and the non-functional water points are indeed spatially clustered.</p>
+<p><strong>Visualizing Monte Carlo Moran’s I</strong></p>
+<p>We could also plot the simulated Moran’s I statistics to analyze its significance.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(bperm<span class="sc">$</span>res[<span class="dv">1</span><span class="sc">:</span><span class="dv">999</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+-0.079821 -0.015777 -0.001772 -0.001140  0.012762  0.084960 </code></pre>
+</div>
+</div>
+<p>The summary report shows that the simulated Moran’s I statistic has a mean of -0.001140. The smallest Moran’s I statistic is -0.079821. and the largest is 0.084960.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(bperm<span class="sc">$</span>res[<span class="dv">1</span><span class="sc">:</span><span class="dv">999</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.0004987204</code></pre>
+</div>
+</div>
+<p>Furthermore, the simulated Moran’s I statistic has a variance of 0.000499.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(bperm<span class="sc">$</span>res, </span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">freq =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks =</span> <span class="dv">20</span>, </span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span> <span class="st">"Simulated Moran's I"</span>)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v =</span> <span class="dv">0</span>, </span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">"red"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="Take-home_Ex1_files/figure-html/unnamed-chunk-32-1.png" class="img-fluid" width="672"></p>
+<p><img src="Take-home_Ex1_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<p>The plots above show that most of the non-functional water points are using mechanized pump or hand pump. Very few of the non-functional water points are using tapstand. Cross referencing with the previous analysis regarding the sources of the non-functional water points, it might be good to replace the non-functional water points with piped water using tapstand.</p>
+<p>The histogram above shows the distribution of Moran’s I values we could expect if the non-functional water points are randomly distributed across Nigeria. According to the Moran’s I test we performed earlier, the Moran’s I statistic is 0.463 which is far away to the right to the histogram. Hence, we could conclude that the Moran’s I statistic of 0.463 is significant, and the non-functional water points are spatially clustered.</p>
+</section>
+</section>
+<section id="spatial-correlagram" class="level2">
+<h2 class="anchored" data-anchor-id="spatial-correlagram">Spatial Correlagram</h2>
+<p>Next, let’s check if the non-functional water points rates are correlated at different lags (i.e.&nbsp;distance) based on Moran’s I test.</p>
+<section id="computing-morans-i-correlogram" class="level3">
+<h3 class="anchored" data-anchor-id="computing-morans-i-correlogram">Computing Moran’s I correlogram</h3>
+<p>Let’s compute a 6-lag spatial correlogram of non-functional water points. As NA is not allowed in sp.correlogram function, we’ll replace all the NA in wpt_nonfunc_pct variable to 0.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>nga_wp <span class="ot">&lt;-</span> nga_wp <span class="sc">%&gt;%</span> <span class="fu">mutate_at</span>(<span class="fu">vars</span>(wpt_nonfunc_pct), <span class="sc">~</span><span class="fu">replace_na</span>(., <span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>MI_corr <span class="ot">&lt;-</span> <span class="fu">sp.correlogram</span>(wm_q, </span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>                          nga_wp<span class="sc">$</span>wpt_nonfunc_pct, </span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">order =</span> <span class="dv">6</span>, </span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">method =</span> <span class="st">"I"</span>, </span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>                          <span class="at">style =</span> <span class="st">"W"</span>,</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>                          <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(MI_corr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Take-home_Ex1_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Let’s also check the p values at each lag.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(MI_corr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Spatial correlogram for nga_wp$wpt_nonfunc_pct 
+method: Moran's I
+           estimate expectation    variance standard deviate Pr(I) two sided
+1 (773)  4.8408e-01 -1.2953e-03  4.7375e-04          22.2997       &lt; 2.2e-16
+2 (773)  3.8123e-01 -1.2953e-03  2.0301e-04          26.8472       &lt; 2.2e-16
+3 (773)  2.8262e-01 -1.2953e-03  1.2246e-04          25.6559       &lt; 2.2e-16
+4 (773)  1.7152e-01 -1.2953e-03  8.8004e-05          18.4213       &lt; 2.2e-16
+5 (773)  8.7205e-02 -1.2953e-03  6.9105e-05          10.6461       &lt; 2.2e-16
+6 (773)  5.0029e-02 -1.2953e-03  5.7652e-05           6.7596       1.384e-11
+           
+1 (773) ***
+2 (773) ***
+3 (773) ***
+4 (773) ***
+5 (773) ***
+6 (773) ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<p>The report shows that the p-values at all legs are less than 0.05, and we have enough evidence to conclude that the non-functional water points rates are significantly correlated among nearby neighbours at 5% significance level. This validates our conclusion from the previous section that the non-functional water points are spatially clustered.</p>
 <p>Thank you!</p>
 </section>
 </section>

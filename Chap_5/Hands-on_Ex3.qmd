@@ -959,7 +959,7 @@ plot(clust6,
 
 ```
 
-### Visualizing the clusters in choropleth map 
+### Visualizing the clusters in choropleth map
 
 Let's now plot the newly derived clusters using SKATER method.
 
