@@ -172,13 +172,92 @@ We have a new column, *geometry*, added into the simple feature data frame. The 
 Next, let's import the geospatial data into R as a polygon feature data.
 
 ```{r}
-#| eval: false
 nga <- st_read(dsn = "Data/geoBoundaries-NGA-ADM2-all",
                layer = "geoBoundaries-NGA-ADM2")
 
 ```
 
 We can see that this geospatial data is a multipolygon features object. It contains 774 multipolygon features and 5 fields. It is in WGS 84 coordinates system, and the bounding box provides the x and y extends of the data.
+
+Now, let's check if there are any duplicated polygons in the geospatial data.
+
+```{r}
+n_occur <- data.frame(table(nga$shapeName))
+n_occur[n_occur$Freq > 1,]
+nga[nga$shapeName %in% n_occur$Var1[n_occur$Freq > 1], ]
+
+```
+
+Indeed, the table above shows that there are 6 pairs of duplicated polygons. However, they have different geometry values which means they are not the same regions.
+
+Let's view those polygons with duplicated shapename in the map to validate our findings.
+
+```{r}
+nga_new <- left_join(nga, n_occur, by = c("shapeName" = "Var1"))
+
+tm_shape(nga_new) +
+  tm_polygons("Freq")
+
+```
+
+Indeed, those polygons are different although they have the same shapename. Let's use label the polygons with shapeID which contains unique IDs for easy identification.
+
+```{r}
+tm_shape(nga_new) +
+  tm_polygons() +
+  tm_shape(filter(nga_new, Freq == 2)) +
+  tm_polygons("shapeID") +
+  tm_legend(legend.outside=TRUE)
+
+```
+
+By referencing to cirad Aware webpage for **Nigeria administrative boundaries (level 2)** which is an interactive webpage to view geospatial data, we are able to identify the correct names for the polygons.
+
+| shapeID                    | Original shapeName | Correct shapeName   |
+|----------------------------|--------------------|---------------------|
+| NGA-ADM2-72505758B95534398 | Bassa              | Bassa (Kogi)        |
+| NGA-ADM2-72505758B52690633 | Bassa              | Bassa (Plateau)     |
+| NGA-ADM2-72505758B26581542 | Ifelodun           | Ifelodun (Kwara)    |
+| NGA-ADM2-72505758B18326272 | Ifelodun           | Ifelodun (Osun)     |
+| NGA-ADM2-72505758B75034141 | Irepodun           | Irepodun (Kwara)    |
+| NGA-ADM2-72505758B79178637 | Irepodun           | Irepodun (Osun)     |
+| NGA-ADM2-72505758B6786568  | Nasarawa           | Nasarawa (Kano)     |
+| NGA-ADM2-72505758B67188591 | Nasarawa           | Nasarawa (Nasarawa) |
+| NGA-ADM2-72505758B7318634  | Obi                | Obi (Benue)         |
+| NGA-ADM2-72505758B3073896  | Obi                | Obi (Nasarawa)      |
+| NGA-ADM2-72505758B6675111  | Surulere           | Surulere (Lagos)    |
+| NGA-ADM2-72505758B31597260 | Surulere           | Surulere (Oyo)      |
+
+Now, let's correct the shape names for the polygons with duplicated names.
+
+```{r}
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B95534398"] <- "Bassa (Kogi)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B52690633"] <- "Bassa (Plateau)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B26581542"] <- "Ifelodun (Kwara)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B18326272"] <- "Ifelodun (Osun)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B75034141"] <- "Irepodun (Kwara)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B79178637"] <- "Irepodun (Osun)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B6786568"] <- "Nasarawa (Kano)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B67188591"] <- "Nasarawa (Nasarawa)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B7318634"] <- "Obi (Benue)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B3073896"] <- "Obi (Nasarawa)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B6675111"] <- "Surulere (Lagos)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B31597260"] <- "Surulere (Oyo)"
+
+nga_new <- nga_new[, 1:5]
+
+```
+
+Let's check if the shape names are unique now.
+
+```{r}
+n_occur <- data.frame(table(nga_new$shapeName))
+n_occur[n_occur$Freq > 1,]
+nga_new[nga_new$shapeName %in% n_occur$Var1[n_occur$Freq > 1], ]
+
+```
+
+The report above shows that the shape names are unique now.
 
 ## Extracting Information about Non-Functional Water Points
 
@@ -200,12 +279,12 @@ Let's add the count of the total water points and the non-functional water point
 
 ```{r}
 #| eval: false
-nga_wp <- nga %>% 
+nga_wp <- nga_new %>% 
   mutate(total_wpt = lengths(
-    st_intersects(nga, wp_sf)
+    st_intersects(nga_new, wp_sf)
   )) %>%
   mutate(wpt_nonfunc = lengths(
-    st_intersects(nga, wp_nonfunc)
+    st_intersects(nga_new, wp_nonfunc)
   ))
 
 ```
@@ -413,6 +492,97 @@ print(MI_corr)
 ```
 
 The report shows that the p-values at all legs are less than 0.05, and we have enough evidence to conclude that the non-functional water points rates are significantly correlated among nearby neighbours at 5% significance level. This validates our conclusion from the previous section that the non-functional water points are spatially clustered.
+
+## Cluster and Outlier Analysis
+
+We know by now that there are spatial clusters in terms of non-functional water point rates in Nigeria. Next, we need to to identify the clusters and find out if there are any outliers in terms of non-functional water point rates.
+
+### Computing local Moran's I
+
+Let's compute the local Moran's I statistic.
+
+```{r}
+fips <- order(nga_wp$shapeName)
+localMI <- localmoran(nga_wp$wpt_nonfunc_pct, 
+                      rswm_q,
+                      zero.policy = TRUE, 
+                      na.action=na.omit)
+head(localMI)
+
+```
+
+Next, let's list the local Moran'I statistic by each region.
+
+```{r}
+printCoefmat(data.frame(
+  localMI[fips, ], 
+  row.names = nga_wp$shapeName[fips]),
+  check.names = FALSE)
+
+```
+
+### **Mapping the local Moran's I**
+
+Let's first append the local Moran's I data frame onto nga_wp SpatialPolygonDataFrame.
+
+```{r}
+nga_wp.localMI <- cbind(nga_wp,localMI) %>%
+  rename(Pr.Ii = Pr.z....E.Ii..)
+
+```
+
+We then plot the local Moran's I values on the township boundaries.
+
+```{r}
+tm_shape(nga_wp.localMI) +
+  tm_fill(col = "Ii", 
+          style = "pretty",
+          palette = "RdBu",
+          title = "Local Moran Statistics") +
+  tm_borders(alpha = 0.5) +
+  tm_legend(legend.outside = TRUE)
+
+```
+
+### Mapping local Moran's I p-values
+
+Although the map above shows that there are both positive and negative Ii values, let's plot the p-values to check if they are statistically significant.
+
+```{r}
+tm_shape(nga_wp.localMI) +
+  tm_fill(col = "Pr.Ii", 
+          breaks = c(-Inf, 0.001, 0.01, 0.05, 0.1, Inf),
+          palette = "-Blues", 
+          title = "Local Moran's I p-values") +
+  tm_borders(alpha = 0.5) +
+  tm_legend(legend.outside = TRUE)
+
+```
+
+Let's plot them side by side for easy comparison.
+
+```{r}
+localMI.map <- tm_shape(nga_wp.localMI) +
+  tm_fill(col = "Ii", 
+          style = "pretty",
+          palette = "RdBu",
+          title = "Local Moran Statistics") +
+  tm_borders(alpha = 0.5) +
+  tm_legend(legend.outside = TRUE)
+
+pvalue.map <- tm_shape(nga_wp.localMI) +
+  tm_fill(col = "Pr.Ii", 
+          breaks = c(-Inf, 0.001, 0.01, 0.05, 0.1, Inf),
+          palette = "-Blues", 
+          title = "Local Moran's I p-values") +
+  tm_borders(alpha = 0.5) +
+  tm_legend(legend.outside = TRUE)
+
+tmap_arrange(localMI.map, pvalue.map, asp=1, ncol=2)
+
+```
+
+The plots above show that most of the clusters with positive Ii values are statistically significant at 5% significance level.
 
 Thank you!
 
