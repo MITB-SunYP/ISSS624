@@ -211,7 +211,7 @@ tm_shape(nga_new) +
 
 ```
 
-By referencing to cirad Aware webpage for **Nigeria administrative boundaries (level 2)** which is an interactive webpage to view geospatial data, we are able to identify the correct names for the polygons.
+By referencing to cirad Aware webpage for **Nigeria administrative boundaries (level 2)** ([link](https://aware.cirad.fr/layers/geonode:nigeria_adminboundaries_adm2_20170222_32631)) which is an interactive webpage to view geospatial data, we are able to identify the correct names for the polygons.
 
 | shapeID                    | Original shapeName | Correct shapeName   |
 |----------------------------|--------------------|---------------------|
@@ -583,6 +583,336 @@ tmap_arrange(localMI.map, pvalue.map, asp=1, ncol=2)
 ```
 
 The plots above show that most of the clusters with positive Ii values are statistically significant at 5% significance level.
+
+## Creating LISA Cluster Map
+
+Next, we'll use LISA cluster map to identify the types of the spatial autocorrelation of the clusters.
+
+### Plotting Moran Scatterplot
+
+Let's first plot the Moran scatterplot to compare the non-functional water point rates in the regions against their neighbours.
+
+```{r}
+nci <- moran.plot(nga_wp$wpt_nonfunc_pct, rswm_q,
+                  labels = as.character(nga_wp$shapeName), 
+                  xlab = "Proportion of Non-functional Water Points", 
+                  ylab = "Spatially Lag",
+                  zero.policy = TRUE)
+
+```
+
+There are four quadrants in the plot. Top right and bottom left quadrants indicate the existence of clusters, and the other two quadrants indicate the outliers. The graph below demonstrates the definition of the clusters and outliers.
+
+![](Moran%20Scatterplot.png)
+
+### Plotting Moran scatterplot with standardized variables
+
+Next, we'll standardize the non-functional water point rates and plot the Moran scatterplot again.
+
+```{r}
+nga_wp$Z.wpt_nonfunc_pct <- scale(nga_wp$wpt_nonfunc_pct) %>% 
+  as.vector 
+
+```
+
+```{r}
+nci2 <- moran.plot(nga_wp$Z.wpt_nonfunc_pct, rswm_q,
+                  labels = as.character(nga_wp$shapeName), 
+                  xlab = "z-Proportion of Non-functional Water Points", 
+                  ylab = "z-Spatially Lag",
+                  zero.policy = TRUE)
+
+```
+
+### Preparing LISA map classes
+
+Next, let's prepare a LISA cluster map.
+
+```{r}
+quadrant <- vector(mode="numeric", length = nrow(localMI))
+
+```
+
+Next, we'll derive the spatially lagged non-functional water points rate, and center the spatially lagged variable around its mean.
+
+```{r}
+nga_wp$lag_wpt_nonfunc_pct <- lag.listw(rswm_q, nga_wp$wpt_nonfunc_pct, zero.policy = TRUE, na.action = na.omit)
+
+DV <- nga_wp$lag_wpt_nonfunc_pct - mean(nga_wp$lag_wpt_nonfunc_pct)     
+
+```
+
+We also center the local Moran's I around its mean.
+
+```{r}
+LM_I <- localMI[,1] - mean(localMI[,1])    
+
+```
+
+And we will use 5% as the significance level.
+
+```{r}
+signif <- 0.05
+
+```
+
+Next, we'll define the four quadrants as shown in the Moran scatterplot.
+
+```{r}
+quadrant[DV <0 & LM_I>0] <- 1
+quadrant[DV >0 & LM_I<0] <- 2
+quadrant[DV <0 & LM_I<0] <- 3  
+quadrant[DV >0 & LM_I>0] <- 4
+
+```
+
+And place the non-significant Moran in category 0.
+
+```{r}
+quadrant[localMI[,5] > signif] <- 0
+
+```
+
+### Plotting LISA map
+
+```{r}
+nga_wp.localMI$quadrant <- quadrant
+colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
+clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
+
+tm_shape(nga_wp.localMI) +
+  tm_fill(col = "quadrant", 
+          style = "cat", 
+          palette = colors[c(sort(unique(quadrant)))+1], 
+          labels = clusters[c(sort(unique(quadrant)))+1],
+          popup.vars = c("")) +
+  tm_view(set.zoom.limits = c(11,17)) +
+  tm_borders(alpha=0.5) +
+  tm_legend(legend.outside=TRUE)
+
+```
+
+Let's plot all the maps together for easy comparison.
+
+```{r}
+wpt_nonfunc_pct <- qtm(nga_wp, "wpt_nonfunc_pct")
+
+nga_wp.localMI$quadrant <- quadrant
+colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
+clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
+
+LISAmap  <- tm_shape(nga_wp.localMI) +
+  tm_fill(col = "quadrant", 
+          style = "cat", 
+          palette = colors[c(sort(unique(quadrant)))+1], 
+          labels = clusters[c(sort(unique(quadrant)))+1],
+          popup.vars = c("")) +
+  tm_view(set.zoom.limits = c(11,17)) +
+  tm_borders(alpha=0.5)
+
+tmap_arrange(wpt_nonfunc_pct, LISAmap,
+             asp=0, ncol=2)
+
+```
+
+```{r}
+localMI.map <- tm_shape(nga_wp.localMI) +
+  tm_fill(col = "Ii", 
+          style = "pretty",
+          palette = "RdBu",
+          title = "Local Moran Statistics") +
+  tm_borders(alpha = 0.5)
+
+pvalue.map <- tm_shape(nga_wp.localMI) +
+  tm_fill(col = "Pr.Ii", 
+          breaks = c(-Inf, 0.001, 0.01, 0.05, 0.1, Inf),
+          palette = "-Blues", 
+          title = "Local Moran's I p-values") +
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(localMI.map, pvalue.map,
+             asp=0, ncol=2)
+
+```
+
+We could observe from the plots above that:
+
+-   There is a big cluster of townships with low non-functional water point rates at the north-eastern part of Nigeria
+
+-   There are also a few small clusters with high non-functional water point rates at the southern part of the country.
+
+-   There are a few ourliers in the northern Nigeria where the townships having high non-functional water point rates but their neighbours have low non-functional water point rates.
+
+-   On the other hand, there are a few townships in the central and north-western part of the country having low non-functional water point rates but their neighbours have high non-functional water point rates.
+
+## Hot Spot and Cold Spot Area Analysis
+
+Next, let's check if there is any township having significantly high or low non-functional water point rates.
+
+### Getis and Ord's G-Statistics
+
+We'll use Getis and Ord's G-statistics to check if there are any
+
+-   hot-spots within the clusters having high non-functional water point rates
+
+-   cold-spots within the clusters having low non-functional water point rates
+
+**Deriving distance-based weight matrix**
+
+First, we'll re-define the neighbours based on distance. There are two types of distance-based proximity matrix:
+
+-   fixed distance weight matrix
+
+-   adaptive distance weight matrix
+
+Regardless of the type of the distance-based proximity matrix, we need to derive the centroid of the townships first.
+
+In order to derive the centroid, we need to obtain the coordinates of the townships.
+
+```{r}
+longitude <- map_dbl(nga_wp$geometry, ~st_centroid(.x)[[1]])
+
+latitude <- map_dbl(nga_wp$geometry, ~st_centroid(.x)[[2]])
+
+coords <- cbind(longitude, latitude)
+
+```
+
+**Determine the cut-off distance**
+
+Let's determine the upper limit for distance band by checking the distance distribution.
+
+```{r}
+k1 <- knn2nb(knearneigh(coords))
+k1dists <- unlist(nbdists(k1, coords, longlat = TRUE))
+summary(k1dists)
+
+```
+
+We use the largest first nearest neighbour distance, 71.661, as the upper threshold to ensure all the townships will have at least one neighbour.
+
+**Computing fixed distance weight matrix**
+
+Next, we compute the distance matrix.
+
+```{r}
+wm_d72 <- dnearneigh(coords, 0, 72, longlat = TRUE)
+wm_d72
+
+```
+
+Next, we convert the nb object into spatial weights object.
+
+```{r}
+wm72_lw <- nb2listw(wm_d72, style = 'B')
+summary(wm72_lw)
+
+```
+
+## Computing Adaptive Distance Weight Matrix 
+
+However, fixed distance might lead us to biased results because more densely settled areas (e.g., urban area) would have more neighbours, and less densely settled areas (e.g., rural area) would have less neighbours. Having many neighbours smoothes the neighbout relationship across more neighbours.
+
+To avoid this, we could control the number of neighbours directly either accepting asymmetric neighbours or imposing symmetric. In this exercise, let's try to limit the number of neighbours to 8 first.
+
+```{r}
+knn <- knn2nb(knearneigh(coords, k=8))
+knn
+
+```
+
+Then convert the nb object into spatial weights object.
+
+```{r}
+knn_lw <- nb2listw(knn, style = 'B')
+summary(knn_lw)
+
+```
+
+## Computing Gi Statistics
+
+### Gi statistics using fixed distance
+
+Let's first calculate the Gi statistics using the fixed distance weight matrix we derived earlier.
+
+```{r}
+fips <- order(nga_wp$shapeName)
+gi.fixed <- localG(nga_wp$wpt_nonfunc_pct, wm72_lw)
+gi.fixed
+
+```
+
+Next, we join the Gi values to nga_wp data frame.
+
+```{r}
+nga_wp.gi <- cbind(nga_wp, as.matrix(gi.fixed)) %>%
+  rename(gstat_fixed = as.matrix.gi.fixed.)
+
+```
+
+### Mapping Gi values with fixed distance weights
+
+Let's plot the Gi values derived using fixed distance weight matrix on the township boundaries.
+
+```{r}
+wpt_nonfunc_pct <- qtm(nga_wp, "wpt_nonfunc_pct")
+
+Gimap <-tm_shape(nga_wp.gi) +
+  tm_fill(col = "gstat_fixed", 
+          style = "pretty",
+          palette="-RdBu",
+          title = "Local Gi") +
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(wpt_nonfunc_pct, Gimap,
+             asp=0, ncol=2)
+
+```
+
+From the plots above, we observe that there are a few townships in the north-eastern and nothern parts of the country having significantly lower non-functional water point rates than their neighbours (i.e., cold-spots). On the other hand, there are a few townships in the southern part having significantly higher non-functional water point rates than their neighbours (i.e., hot-spots).
+
+### Gi statistics using adaptive distance
+
+Next, let's try to derive the Gi statistics using adaptive distance weight matrix computed earlier.
+
+```{r}
+fips <- order(nga_wp$shapeName)
+gi.adaptive <- localG(nga_wp$wpt_nonfunc_pct, knn_lw)
+nga_wp.gi <- cbind(nga_wp, as.matrix(gi.adaptive)) %>%
+  rename(gstat_adaptive = as.matrix.gi.adaptive.)
+
+```
+
+### Mapping Gi values with adaptive distance weights
+
+Let's plot the Gi values derived using fixed distance weight matrix on the township boundaries.
+
+```{r}
+wpt_nonfunc_pct <- qtm(nga_wp, "wpt_nonfunc_pct")
+
+Gimap <- tm_shape(nga_wp.gi) + 
+  tm_fill(col = "gstat_adaptive", 
+          style = "pretty", 
+          palette="-RdBu", 
+          title = "Local Gi") + 
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(wpt_nonfunc_pct, Gimap, 
+             asp=0, ncol=2)
+
+```
+
+From the plots above we could see that the hot-spots and cold-spots have been changed comparing to the plots using fixed distance weight matrix. The cold spots are centered at the northeast corner of the county, and the hot spots are centered at the southern part now.
+
+## Conclusion
+
+After performing the relevant global and local analysis and tests on the non-functional water points in Nigeria, we successfully discovered the following insights:
+
+-   There are indeed area / clusters containing townships having low non-functional water point rates, and there are also area / clusters containing townships having high non-functional water point rates
+
+-   There are area having low non-functional water point rates but surrounded by neighbours having high non-functional water point rates. There are also area having high non-functional water point rates but surrounded by neighbours having low non-functional water point rates. Further investigation into those area might help the government to gain in-depth understanding about them, and could help them to improve the water supply system.
+
+-   There are townships having significantly lower non-functional water point rates among the low rate clusters, and there are townships having significantly higher rates among the high rate clusters.
 
 Thank you!
 
