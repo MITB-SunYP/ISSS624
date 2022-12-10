@@ -263,7 +263,7 @@ We'll use all the other variables in the data frame as the independent variables
 condo.mlr <- lm(formula = SELLING_PRICE ~ AREA_SQM + AGE    + 
                   PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE +
                   PROX_URA_GROWTH_AREA + PROX_HAWKER_MARKET + PROX_KINDERGARTEN + 
-                  PROX_MRT  + PROX_PARK + PROX_PRIMARY_SCH + 
+                  PROX_MRT + PROX_PARK + PROX_PRIMARY_SCH + 
                   PROX_TOP_PRIMARY_SCH + PROX_SHOPPING_MALL + PROX_SUPERMARKET + 
                   PROX_BUS_STOP + NO_Of_UNITS + FAMILY_FRIENDLY + FREEHOLD, 
                 data=condo_resale.sf)
@@ -272,7 +272,7 @@ summary(condo.mlr)
 
 ```
 
-The summary tells us:
+The summary report tells us:
 
 -   F-statistic: the p-value is less than 0.05, which indicates that the model is a good fit of the selling price at 5% significance level
 
@@ -281,3 +281,164 @@ The summary tells us:
 -   Coefficients: the p-values reveals that some independent variables are significant (e.g., AREA_SQM, AGE), and some are not (e.g., PROX_HAWKER_MARKET, PROX_KINDERGARTEN).
 
 ### Preparing publication quality table: olsrr method
+
+Next, we'll remove the insignificant variables and build the model again.
+
+```{r}
+condo.mlr1 <- lm(formula = SELLING_PRICE ~ AREA_SQM + AGE + 
+                   PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE +
+                   PROX_URA_GROWTH_AREA + PROX_MRT + PROX_PARK + 
+                   PROX_PRIMARY_SCH + PROX_SHOPPING_MALL + PROX_BUS_STOP + 
+                   NO_Of_UNITS + FAMILY_FRIENDLY + FREEHOLD,
+                 data=condo_resale.sf)
+
+ols_regress(condo.mlr1)
+
+```
+
+The summary tells us:
+
+-   F-statistic: the p-value is less than 0.05, which indicates that the model is a good fit of the selling price at 5% significance level
+
+-   Adjusted R-squared: in indicates that the model is able to explain 64.7% of the variation in condo selling price. This is the same as the full model although less independent variables are used. Therefore, this model is better than the full model.
+
+-   Coefficients: the p-values reveals that all the independent variables in this model are significant.
+
+### Preparing publication quality table: gtsummary method
+
+We could make the model summary look better by using gtsummary.
+
+```{r}
+tbl_regression(condo.mlr1, intercept = TRUE)
+
+```
+
+In addition to the default information about the independent variables, we could also append the model statistics in the table.
+
+```{r}
+tbl_regression(condo.mlr1, 
+               intercept = TRUE) %>% 
+  add_glance_source_note(
+    label = list(sigma ~ "\U03C3"),
+    include = c(r.squared, adj.r.squared, 
+                AIC, statistic,
+                p.value, sigma))
+
+```
+
+R-squared, adjusted R-squared, AIC, F statistic, p-value of the F test, as well as the sigma are added at the bottom of the table now.
+
+### Checking for multicollinearity
+
+Besides correlation matrix, VIF is another method to check if any independent variables are strongly correlated. Let's check VIF for the significant variables.
+
+```{r}
+ols_vif_tol(condo.mlr1)
+
+```
+
+The lower the VIF score, the more independent the variables are. 10 is a common cutoff point used to determine if multicollinearity exists. Since all the VIFs are less than 10 in the report above, we could conclude that the independent variables are independent.
+
+### Test for non-linearity 
+
+Another assumption to check for multi linear regression model is the linearity and additivity of the relationship between dependent and independent variables.
+
+```{r}
+ols_plot_resid_fit(condo.mlr1)
+
+```
+
+As the residuals are mostly scattered around 0, we could conclude that the independent variables and the dependent variable are linearly related.
+
+### Test for normality assumption
+
+We also need to check if the residuals are normally distributed.
+
+```{r}
+ols_plot_resid_hist(condo.mlr1)
+
+```
+
+The histogram and the density curve show that the residuals generally follows a normal distribution.
+
+```{r}
+ols_test_normality(condo.mlr1)
+
+```
+
+The small p-values, \< 0.05, in the report above confirm that the residuals are normally distributed.
+
+### Testing for spatial autocorrelation 
+
+The hedonic model we try to build are using geographically referenced attributes, hence it is also important for us to visualize the residual of the hedonic pricing model.
+
+In order to perform spatial autocorrelation test, we need to convert *condo_resale.sf* from sf data frame into a SpatialPointsDataFrame.
+
+We first export the residuals of the hedonic model to a data frame.
+
+```{r}
+mlr.output <- as.data.frame(condo.mlr1$residuals)
+
+```
+
+We then join the residual data frame with the *condo_resale.sf* object.
+
+```{r}
+condo_resale.res.sf <- cbind(condo_resale.sf, 
+                        condo.mlr1$residuals) %>%
+rename(`MLR_RES` = `condo.mlr1.residuals`)
+
+```
+
+Next, we convert the *condo_resale.res.sf* from simple feature object into a SpatialPointsDataFrame object.
+
+```{r}
+condo_resale.sp <- as_Spatial(condo_resale.res.sf)
+condo_resale.sp
+
+```
+
+Now, we could display the distribution of the residuals on an interactive map.
+
+```{r}
+tmap_mode("view")
+
+tm_shape(mpsz_svy21)+
+  tmap_options(check.and.fix = TRUE) +
+  tm_polygons(alpha = 0.4) +
+tm_shape(condo_resale.res.sf) +  
+  tm_dots(col = "MLR_RES",
+          alpha = 0.6,
+          style="quantile") +
+  tm_view(set.zoom.limits = c(11,14))
+
+tmap_mode("plot")
+
+```
+
+The plot above shows signs of spatial autocorrelation. Let's use Moran's I test to verify the result.
+
+We first compute the distance-based weight matrix.
+
+```{r}
+nb <- dnearneigh(coordinates(condo_resale.sp), 0, 1500, longlat = FALSE)
+summary(nb)
+
+```
+
+Next, we convert the neighbours list into a spatial weights with equal weights applied to each neighbour.
+
+```{r}
+nb_lw <- nb2listw(nb, style = 'W')
+summary(nb_lw)
+
+```
+
+Now we could carry out the Moran's I test for residual spatial autocorrelation.
+
+```{r}
+lm.morantest(condo.mlr1, nb_lw)
+
+```
+
+The summary report above shows that the p-value is less than 0.05. Hence, there is enough evidence for us to conclude that the model residuals are spatially autocorrelated. The positive Moran's I statistic of 0.144 confirms that the model residuals are spatially clustered.
