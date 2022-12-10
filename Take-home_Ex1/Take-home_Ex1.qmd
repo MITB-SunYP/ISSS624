@@ -809,7 +809,7 @@ summary(wm72_lw)
 
 ```
 
-## Computing Adaptive Distance Weight Matrix 
+## Computing Adaptive Distance Weight Matrix
 
 However, fixed distance might lead us to biased results because more densely settled areas (e.g., urban area) would have more neighbours, and less densely settled areas (e.g., rural area) would have less neighbours. Having many neighbours smoothes the neighbout relationship across more neighbours.
 

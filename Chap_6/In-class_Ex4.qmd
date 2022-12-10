@@ -1,0 +1,283 @@
+---
+title: "Hands-on Exercise 4: Calibrating Hedonic Pricing Model for Private Highrise Property with GWR Method"
+editor: visual
+---
+
+## Overview
+
+In this hands-on exercise, I learned how to build [hedonic pricing](https://www.investopedia.com/terms/h/hedonicpricing.asp) models by using GWR methods. The dependent variable is the resale prices of condominium in 2015. The independent variables are divided into either structural and locational.
+
+## Getting Started
+
+Firstly, we need to install the required R packages.
+
+-   **olsrr:**
+
+-   **GWmodel:**
+
+-   **corrplot:**
+
+-   **sf**: importing, managing and processing geospatial data.
+
+-   **tmap**: plotting Thematic Maps.
+
+-   **tidyverse**: importing, wrangling and visualizing data. It consists of a family of R packages, including **readr**, **readxl**, **tidyr**, **dplyr** and **ggplot2**.
+
+```{r}
+pacman::p_load(olsrr, corrplot, ggpubr, sf, spdep, GWmodel, tmap, tidyverse, gtsummary)
+
+```
+
+## Importing Required Data
+
+### Importing geospatial data
+
+The following codes import URA Master Plan 2014's planning subzone boundaries shapefile into R as a polygon feature data frame.
+
+```{r}
+mpsz <- st_read(dsn = "data/geospatial",
+                 layer = "MP14_SUBZONE_WEB_PL")
+
+```
+
+The imported simple feature data frame is a multipolygon object. It contains 323 features and 15 fields. In addition, it's in SVY21 Coordinate System. However, it doesn't have EPSG information.
+
+### Updating CRS information
+
+```{r}
+mpsz_svy21 <- st_transform(mpsz, 3414)
+st_crs(mpsz_svy21)
+
+```
+
+Now the EPSG is indicated as 3414.
+
+We could view the extent of the coordinates.
+
+```{r}
+st_bbox(mpsz_svy21)
+
+```
+
+### Importing the aspatial data
+
+The following code chunk imports *Condo_resale_2015* data set into R as a tibble data frame. The data is extracted from The 2014 Myanmar Population and Housing Census Myanmar.
+
+```{r}
+condo_resale <- read_csv("data/aspatial/Condo_resale_2015.csv")
+
+```
+
+The ict tibble data frame has 1436 rows and 23 columns.
+
+```{r}
+glimpse(condo_resale)
+
+```
+
+The data looks good by verifying the first few rows.
+
+```{r}
+summary(condo_resale)
+
+```
+
+The summary report shows that there isn't any missing data in the data, and the values are in the reasonable ranges.
+
+### Converting aspatial data frame into a sf object
+
+```{r}
+condo_resale.sf <- st_as_sf(condo_resale,
+                            coords = c("LONGITUDE", "LATITUDE"),
+                            crs=4326) %>%
+  st_transform(crs=3414)
+
+```
+
+As the longitude and latitude variables are in decimal format, we could assume that the data is in WGS84 coordinate system. We converted it to SVY21 coordinate system so we could join it with the geospatial data.
+
+```{r}
+head(condo_resale.sf)
+
+```
+
+The original longitude and latitude columns are now replaced by a geometry column.
+
+## Exploratory Data Analysis (EDA)
+
+Let's do some exploration to have a better understanding on the data.
+
+### EDA using statistical graphics
+
+First of all, let check the distribution of the response variable, *SELLING_PRICE.*
+
+```{r}
+ggplot(data=condo_resale.sf, aes(x=`SELLING_PRICE`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+```
+
+The plot shows that the selling price of codo in 2015 follows a right skewed distribution, which means there are more units with a relatively lower selling price.
+
+We could do a log transformation to normalize the selling price distribution if necessary.
+
+```{r}
+condo_resale.sf <- condo_resale.sf %>%
+  mutate(`LOG_SELLING_PRICE` = log(SELLING_PRICE))
+
+ggplot(data=condo_resale.sf, aes(x=`LOG_SELLING_PRICE`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+```
+
+The data in the plot above looks more like to a normal distribution now, but it's still slightly skewed to the right.
+
+### Multiple histogram plots distribution of variables
+
+Next, let's look at the distribution of the other numerical variables.
+
+```{r fig.width = 10, fig.height = 10}
+AREA_SQM <- ggplot(data=condo_resale.sf, aes(x= `AREA_SQM`)) + 
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+AGE <- ggplot(data=condo_resale.sf, aes(x= `AGE`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+PROX_CBD <- ggplot(data=condo_resale.sf, aes(x= `PROX_CBD`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+PROX_CHILDCARE <- ggplot(data=condo_resale.sf, aes(x= `PROX_CHILDCARE`)) + 
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+PROX_ELDERLYCARE <- ggplot(data=condo_resale.sf, aes(x= `PROX_ELDERLYCARE`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+PROX_URA_GROWTH_AREA <- ggplot(data=condo_resale.sf, 
+                               aes(x= `PROX_URA_GROWTH_AREA`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+PROX_HAWKER_MARKET <- ggplot(data=condo_resale.sf, aes(x= `PROX_HAWKER_MARKET`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+PROX_KINDERGARTEN <- ggplot(data=condo_resale.sf, aes(x= `PROX_KINDERGARTEN`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+PROX_MRT <- ggplot(data=condo_resale.sf, aes(x= `PROX_MRT`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+PROX_PARK <- ggplot(data=condo_resale.sf, aes(x= `PROX_PARK`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+PROX_PRIMARY_SCH <- ggplot(data=condo_resale.sf, aes(x= `PROX_PRIMARY_SCH`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+PROX_TOP_PRIMARY_SCH <- ggplot(data=condo_resale.sf, 
+                               aes(x= `PROX_TOP_PRIMARY_SCH`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+ggarrange(AREA_SQM, AGE, PROX_CBD, PROX_CHILDCARE, PROX_ELDERLYCARE, 
+          PROX_URA_GROWTH_AREA, PROX_HAWKER_MARKET, PROX_KINDERGARTEN, PROX_MRT,
+          PROX_PARK, PROX_PRIMARY_SCH, PROX_TOP_PRIMARY_SCH,  
+          ncol = 3, nrow = 4)
+
+```
+
+The plots above shows that some variables are following a normal distribution, for example, PROX_CBD. On the other hands, most of the variables are right skewed. For example, AGE and PROX_CHILDCARE.
+
+### Drawing statistical point map
+
+Next, let's check the geospatial distribution of the selling price.
+
+```{r}
+tmap_mode("view")
+
+tm_shape(mpsz_svy21)+
+  tmap_options(check.and.fix = TRUE) +
+  tm_polygons() +
+tm_shape(condo_resale.sf) +  
+  tm_dots(col = "SELLING_PRICE",
+          alpha = 0.6,
+          style="quantile") +
+  tm_view(set.zoom.limits = c(11,14))
+
+tmap_mode("plot")
+
+```
+
+The plot above shows that the high selling points are most in the central area. The units in east and west are in the middle, and the selling price in the north is the lowest in Singapore.
+
+## Hedonic Pricing Modelling in R
+
+Now, we'll build hedonic pricing models for condo resale units.
+
+### Simple Linear Regression Method
+
+Let's first build a simple linear regression model using one independent variable, *AREA_SQM.*
+
+```{r}
+condo.slr <- lm(formula=SELLING_PRICE ~ AREA_SQM, data = condo_resale.sf)
+
+summary(condo.slr)
+
+```
+
+The summary tells us:
+
+-   F-statistic: the p-value is less than 0.05, which indicates that the model is a good fit of the selling price at 5% significance level
+
+-   Adjusted R-squared: in indicates that the model is able to explain 45.15% of the variation in condo selling price
+
+-   Coefficients: the small (i.e., \< 0.05) p-value indicates that AREA_SQM is a significant factor in explaining the selling price. The positive coefficient tells that it has a positive relationship with the selling price. in other words, the selling price would increase by 14,719 for every 1 square meter increase in the unit area.
+
+Now, let's plot the best fit line on the scatterplot.
+
+```{r}
+ggplot(data=condo_resale.sf,  
+       aes(x=`AREA_SQM`, y=`SELLING_PRICE`)) +
+  geom_point() +
+  geom_smooth(method = lm)
+
+```
+
+The plot above shows that the model couldn't do well for the larger units with higher resale prices.
+
+The low adjusted R-square tells us that more independent variables are required to explain the selling price.
+
+### Multiple linear regression method
+
+One of the assumptions of multi-linear regression model is that all the independent variables are independent to each other. Therefore, let's check the correlation among the independent variables to avoid multicollinearity.
+
+```{r fig.width=10, fig.height=10}
+corrplot(cor(condo_resale[, 5:23]), diag = FALSE, order = "AOE",
+         tl.pos = "td", tl.cex = 0.5, method = "number", type = "upper")
+
+```
+
+The correlation matrix tells that there are indeed two variables, Freehold and LEASE_99YEAR, are strongly negatively correlated with correlation coefficient being -0.84. Hence, we need to exclude one of them while building the model. In this exercise, we will exclude LEASE_99YEAR is excluded from the model.
+
+### Building a hedonic pricing model using multiple linear regression method
+
+We'll use all the other variables in the data frame as the independent variables in the model, except LEASE_99YEAR.
+
+```{r}
+condo.mlr <- lm(formula = SELLING_PRICE ~ AREA_SQM + AGE    + 
+                  PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE +
+                  PROX_URA_GROWTH_AREA + PROX_HAWKER_MARKET + PROX_KINDERGARTEN + 
+                  PROX_MRT  + PROX_PARK + PROX_PRIMARY_SCH + 
+                  PROX_TOP_PRIMARY_SCH + PROX_SHOPPING_MALL + PROX_SUPERMARKET + 
+                  PROX_BUS_STOP + NO_Of_UNITS + FAMILY_FRIENDLY + FREEHOLD, 
+                data=condo_resale.sf)
+
+summary(condo.mlr)
+
+```
+
+The summary tells us:
+
+-   F-statistic: the p-value is less than 0.05, which indicates that the model is a good fit of the selling price at 5% significance level
+
+-   Adjusted R-squared: in indicates that the model is able to explain 64.74% of the variation in condo selling price. There is an improvement of about 20% in the explained variation comparing to the simple linear regression model using only AREA_SQM as the independent variable.
+
+-   Coefficients: the p-values reveals that some independent variables are significant (e.g., AREA_SQM, AGE), and some are not (e.g., PROX_HAWKER_MARKET, PROX_KINDERGARTEN).
+
+### Preparing publication quality table: olsrr method
