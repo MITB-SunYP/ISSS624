@@ -11,11 +11,11 @@ In this hands-on exercise, I learned how to build [hedonic pricing](https://www.
 
 Firstly, we need to install the required R packages.
 
--   **olsrr:**
+-   **olsrr:** building ordinary least squares regression models
 
--   **GWmodel:**
+-   **GWmodel:** building geographically weighted regression models
 
--   **corrplot:**
+-   **corrplot:** plotting the graph of the correlation matrix
 
 -   **sf**: importing, managing and processing geospatial data.
 
@@ -279,6 +279,7 @@ The summary report tells us:
 -   Adjusted R-squared: in indicates that the model is able to explain 64.74% of the variation in condo selling price. There is an improvement of about 20% in the explained variation comparing to the simple linear regression model using only AREA_SQM as the independent variable.
 
 -   Coefficients: the p-values reveals that some independent variables are significant (e.g., AREA_SQM, AGE), and some are not (e.g., PROX_HAWKER_MARKET, PROX_KINDERGARTEN).
+
 ### Preparing publication quality table: olsrr method
 
 Next, we'll remove the insignificant variables and build the model again.
@@ -302,6 +303,14 @@ The summary tells us:
 -   Adjusted R-squared: in indicates that the model is able to explain 64.7% of the variation in condo selling price. This is the same as the full model although less independent variables are used. Therefore, this model is better than the full model.
 
 -   Coefficients: the p-values reveals that all the independent variables in this model are significant.
+
+    -   Variables having positive impact on the selling price:
+
+        -   AREA_SQM, PROX_ELDERLYCARE, PROX_URA_GROWTH_AREA, PROX_PARK, PROX_PRIMARY_SCH, PROX_BUS_STOP, FAMILY_FRIENDLY, FREEHOLD
+
+    -   variables having negative impact on the selling price:
+
+        -   AGE, PROX_CBD, PROX_CHILDCARE, PROX_MRT, PROX_SHOPPING_MALL, NO_Of_UNITS
 
 ### Preparing publication quality table: gtsummary method
 
@@ -338,7 +347,7 @@ ols_vif_tol(condo.mlr1)
 
 The lower the VIF score, the more independent the variables are. 10 is a common cutoff point used to determine if multicollinearity exists. Since all the VIFs are less than 10 in the report above, we could conclude that the independent variables are independent.
 
-### Test for non-linearity 
+### Test for non-linearity
 
 Another assumption to check for multi linear regression model is the linearity and additivity of the relationship between dependent and independent variables.
 
@@ -347,7 +356,7 @@ ols_plot_resid_fit(condo.mlr1)
 
 ```
 
-As the residuals are mostly scattered around 0, we could conclude that the independent variables and the dependent variable are linearly related.
+As the residuals are mostly scattered around 0, we could conclude that the independent variables and the dependent variable are linearly related. Nevertheless, we do observe a larger deviation at the region with high fitted values. This could indicate that the model performs worse in that region, and we might need to construct separate models for low price units and high price units.
 
 ### Test for normality assumption
 
@@ -367,7 +376,7 @@ ols_test_normality(condo.mlr1)
 
 The small p-values, \< 0.05, in the report above confirm that the residuals are normally distributed.
 
-### Testing for spatial autocorrelation 
+### Testing for spatial autocorrelation
 
 The hedonic model we try to build are using geographically referenced attributes, hence it is also important for us to visualize the residual of the hedonic pricing model.
 
@@ -441,3 +450,230 @@ lm.morantest(condo.mlr1, nb_lw)
 ```
 
 The summary report above shows that the p-value is less than 0.05. Hence, there is enough evidence for us to conclude that the model residuals are spatially autocorrelated. The positive Moran's I statistic of 0.144 confirms that the model residuals are spatially clustered.
+
+## Building Hedonic Pricing Model using GWmodel
+
+Next, we build hedonic pricing model using both the fixed and adaptive bandwidth schemes.
+
+### Building fixed bandwidth GWR model
+
+**Computing fixed bandwidth**
+
+There are two ways to determine the optimal bandwidth:
+
+-   CV cross-validation approach
+
+-   AIC corrected (AICc) approach
+
+We use CV approach in this exercise.
+
+```{r}
+bw.fixed <- bw.gwr(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD + 
+                     PROX_CHILDCARE + PROX_ELDERLYCARE + PROX_URA_GROWTH_AREA + 
+                     PROX_MRT + PROX_PARK + PROX_PRIMARY_SCH + 
+                     PROX_SHOPPING_MALL + PROX_BUS_STOP + NO_Of_UNITS + 
+                     FAMILY_FRIENDLY + FREEHOLD, 
+                   data=condo_resale.sp, 
+                   approach="CV", 
+                   kernel="gaussian", 
+                   adaptive=FALSE, 
+                   longlat=FALSE)
+
+```
+
+The result above shows that the optimal bandwidth is 971.3405 meters. The bandwidth is in meters because the projection system we are using, SVY21, is in meters.
+
+**GWModel method - fixed bandwidth**
+
+Now, we'll calibrate the gwr model using fixed bandwidth and gaussian kernel.
+
+```{r}
+gwr.fixed <- gwr.basic(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD + 
+                         PROX_CHILDCARE + PROX_ELDERLYCARE  + 
+                         PROX_URA_GROWTH_AREA + PROX_MRT + PROX_PARK +
+                         PROX_PRIMARY_SCH + PROX_SHOPPING_MALL + 
+                         PROX_BUS_STOP + NO_Of_UNITS + 
+                         FAMILY_FRIENDLY + FREEHOLD, 
+                       data=condo_resale.sp, 
+                       bw=bw.fixed, 
+                       kernel = 'gaussian', 
+                       longlat = FALSE)
+
+gwr.fixed
+
+```
+
+The report above shows that the AICc value of the Geographically Weighted Regression model is 42263.61, which is significantly lower than that of the Global Regression model (i.e., 42967.14).
+
+### Building adaptive bandwidth GWR model
+
+Next, we'll calibrate a gwr-based hedonic pricing model using adaptive bandwidth approach.
+
+**Computing the adaptive bandwidth**
+
+We'll again use CV approach to determine the optimal bandwidth first.
+
+```{r}
+bw.adaptive <- bw.gwr(formula = SELLING_PRICE ~ AREA_SQM + AGE  + 
+                        PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE + 
+                        PROX_URA_GROWTH_AREA + PROX_MRT + PROX_PARK + 
+                        PROX_PRIMARY_SCH + PROX_SHOPPING_MALL + PROX_BUS_STOP + 
+                        NO_Of_UNITS + FAMILY_FRIENDLY + FREEHOLD, 
+                      data=condo_resale.sp, 
+                      approach="CV", 
+                      kernel="gaussian", 
+                      adaptive=TRUE, 
+                      longlat=FALSE)
+
+```
+
+The result above shows that the optimal bandwidth is 30 neighbours.
+
+**Constructing the adaptive bandwidth gwr model**
+
+Now we'll build the gwr-based hedonic pricing model using adaptive bandwidth and gaussian kernel.
+
+```{r}
+gwr.adaptive <- gwr.basic(formula = SELLING_PRICE ~ AREA_SQM + AGE + 
+                            PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE + 
+                            PROX_URA_GROWTH_AREA + PROX_MRT + PROX_PARK + 
+                            PROX_PRIMARY_SCH + PROX_SHOPPING_MALL + 
+                            PROX_BUS_STOP + NO_Of_UNITS + 
+                            FAMILY_FRIENDLY + FREEHOLD, 
+                          data=condo_resale.sp, bw=bw.adaptive, 
+                          kernel = 'gaussian', 
+                          adaptive=TRUE, 
+                          longlat = FALSE)
+
+gwr.adaptive
+
+```
+
+The report above shows that the AICc value of the Geographically Weighted Regression model is 41982.22, which is the lowest among the three models.
+
+### Visualizing GWR output
+
+In addition to the residuals, the model output also contains the following information:
+
+-   Condition Number: checks for local collinearity. If the condition number exceeds 30, it indicates strong local collinearity which inplies unreliable results.
+
+-   Local R2: ranges from 0 to 1, and indicates how well the local regression model fits the observed y values. The higher the value is, the better the model is. Local R2 can also tell us where the model predicts well and where not, which could provide clues about important variable that may be missing from the regression model.
+
+-   Predicted: the fitted y values
+
+-   Residuals: the difference between the observed y values and the fitted y values. Standardized residual should have mean 0 and standard deviation 1. They could be used to plot a cold-to-hot rendered map.
+
+-   Coefficient Standard Error: measures the reliability of each coefficient estimate. The smaller the standard error, the better the coefficient estimates. Large standard errors may indicate local collinearity.
+
+All these information is stored in a SpatialPointsDataFrame or SpatialPolygonsDataFrame object in SDF format.
+
+### Converting SDF into sf data.frame
+
+In order to visualize the content in SDF, we need to first convert it into sf data.frame.
+
+```{r}
+condo_resale.sf.adaptive <- st_as_sf(gwr.adaptive$SDF) %>%
+  st_transform(crs=3414)
+
+```
+
+```{r}
+condo_resale.sf.adaptive.svy21 <- st_transform(condo_resale.sf.adaptive, 3414)
+
+condo_resale.sf.adaptive.svy21  
+
+```
+
+```{r}
+gwr.adaptive.output <- as.data.frame(gwr.adaptive$SDF)
+
+condo_resale.sf.adaptive <- cbind(condo_resale.res.sf, as.matrix(gwr.adaptive.output))
+
+```
+
+```{r}
+glimpse(condo_resale.sf.adaptive)
+
+```
+
+```{r}
+summary(gwr.adaptive$SDF$yhat)
+
+```
+
+The report above shows the summary statistics of the fitted y values.
+
+### Visualizing local R2
+
+Let's visualize the local R2 in an interactive point symbol map.
+
+```{r}
+tmap_mode("view")
+
+tm_shape(mpsz_svy21)+
+  tm_polygons(alpha = 0.1) +
+tm_shape(condo_resale.sf.adaptive) +  
+  tm_dots(col = "Local_R2",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(11,14))
+
+tmap_mode("plot")
+
+```
+
+The plot above shows that the local R2 are high in most of the area, except a few planning area in the middle.
+
+**By URA planning region**
+
+We could plot the local R2 for only the central region.
+
+```{r}
+tm_shape(mpsz_svy21[mpsz_svy21$REGION_N=="CENTRAL REGION", ])+
+  tm_polygons()+
+tm_shape(condo_resale.sf.adaptive) + 
+  tm_bubbles(col = "Local_R2",
+           size = 0.15,
+           border.col = "gray60",
+           border.lwd = 1)
+
+```
+
+The plot above shows that the area where low R2 was reported are at the top of the central region.
+
+### Visualizing coefficient estimates
+
+We could also create an synced interactive point symbol map to compare the standard error and t test statistic.
+
+```{r}
+tmap_mode("view")
+
+AREA_SQM_SE <- tm_shape(mpsz_svy21)+
+  tm_polygons(alpha = 0.1) +
+tm_shape(condo_resale.sf.adaptive) +  
+  tm_dots(col = "AREA_SQM_SE",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(11,14))
+
+AREA_SQM_TV <- tm_shape(mpsz_svy21)+
+  tm_polygons(alpha = 0.1) +
+tm_shape(condo_resale.sf.adaptive) +  
+  tm_dots(col = "AREA_SQM_TV",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(11,14))
+
+tmap_arrange(AREA_SQM_SE, AREA_SQM_TV, 
+             asp=1, ncol=2,
+             sync = TRUE)
+
+tmap_mode("plot")
+
+```
+
+The plot above shows that the standard error of AREA_SQM variable is low in most of the area, which indicates the variable is reliable.
+
+## Reference
+
+Singapore Land Authority. (n.d.). *Plane Coordinate System - SVY21*. <https://app.sla.gov.sg/sirent/About/PlaneCoordinateSystem>
