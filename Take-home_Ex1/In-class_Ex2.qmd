@@ -113,7 +113,7 @@ freq(data=wpt_functional,
 
 ### Extracting non-functional water point
 
-Next we'll first extract the data for non-functional water points.
+Next we'll extract the data for non-functional water points.
 
 ```{r}
 #| eval: false

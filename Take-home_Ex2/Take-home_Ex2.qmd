@@ -60,9 +60,10 @@ First of all, let's load the required R packages into R:
 -   **heatmaply:** creating interactive cluster heatmaps
 -   **corrplot:** plotting correlation matrix
 -   **psych:** handling multivariate analysis
+-   **funModeling**: a tool box for data preparation and exploratory data analysis
 
 ```{r}
-pacman::p_load(sf, spdep, tmap, tidyverse, rgdal, ggpubr, cluster, factoextra, NbClust, heatmaply, corrplot, psych)
+pacman::p_load(sf, spdep, tmap, tidyverse, rgdal, ggpubr, cluster, factoextra, NbClust, heatmaply, corrplot, psych, funModeling)
 
 ```
 
@@ -267,3 +268,328 @@ There are a total 73 columns in the wp feature data frame, but we don't need all
 +------------------------------------------------------------+-------------+-------------------------------------------+
 
 ### Exploratory Data Analysis (EDA)
+
+Let's now take a look at the distribution of the selected columns.
+
+**Water Points Status**
+
+```{r eval=FALSE}
+freq(data=wp, 
+     input = 'status_cle')
+
+```
+
+We'll group the categories into 3 groups:
+
+-   Functional
+-   Non-functional including non-functional and abandoned water points
+-   Unknown
+
+**Water Point Technology**
+
+```{r eval=FALSE}
+freq(data=wp, 
+     input = 'X_water_tec')
+
+```
+
+We'll focus on hand pump and mechanized pump in the subsequent analysis because the other types have very little instances.
+
+**Usage Capacity**
+
+```{r eval=FALSE}
+freq(data=wp, 
+     input = 'usage_cap')
+
+```
+
+We'll group the values into two groups:
+
+-   \<1000
+-   \>= 1000
+
+**Rural vs Urban**
+
+```{r eval=FALSE}
+freq(data=wp, 
+     input = 'is_urban')
+
+```
+
+**Water Source**
+
+```{r eval=FALSE}
+freq(data=wp, 
+     input = 'water_so_2')
+
+```
+
+The plot above shows that 96.35% of the water points are from well, and there are only 3.65% of the water points are from spring, piped water and unknown sources. As well is the dominant source, we'll drop this variable from subsequent analysis.
+
+**Management Institute**
+
+```{r eval=FALSE}
+freq(data=wp, 
+     input = 'manageme_2')
+
+```
+
+We'll combine the small categories into Others in the clustering analysis:
+
+-   School Management (1.51%)
+-   Health Care Facility (0.46%)
+-   Private Operator/Delegated Management (0.20%)
+-   Other Institutional Management (0.14%)
+-   Other (8.80%)
+
+## Extracting Water Point Data
+
+### Extracting functional water point
+
+We'll first extract the data for functional water points.
+
+```{r eval=FALSE}
+wp_functional <- wp %>%
+  filter(status_cle %in%
+           c("Functional", 
+             "Functional but not in use",
+             "Functional but needs repair"))
+
+```
+
+Let's check the distribution.
+
+```{r eval=FALSE}
+freq(data=wp_functional, 
+     input = 'status_cle')
+
+```
+
+### Extracting non-functional water point
+
+Next we'll extract the data for non-functional water points.
+
+```{r eval=FALSE}
+wp_nonfunctional <- wp %>%
+  filter(status_cle %in%
+           c("Abandoned/Decommissioned", 
+             "Abandoned",
+             "Non-Functional",
+             "Non functional due to dry season",
+             "Non-Functional due to dry season"))
+
+```
+
+Let's check the distribution.
+
+```{r eval=FALSE}
+freq(data=wp_nonfunctional, 
+     input = 'status_cle')
+
+```
+
+### Extracting hand pump water point
+
+Next we'll extract the data for hand pump water points.
+
+```{r eval=FALSE}
+wp_handpump <- wp %>%
+  filter(X_water_tec == 'Hand Pump')
+
+```
+
+Let's check the distribution.
+
+```{r eval=FALSE}
+freq(data=wp_handpump, 
+     input = 'X_water_tec')
+
+```
+
+### Extracting mechanized pump water point
+
+Next we'll extract the data for mechanized pump water points.
+
+```{r eval=FALSE}
+wp_mechpump <- wp %>%
+  filter(X_water_tec == 'Mechanized Pump')
+
+```
+
+Let's check the distribution.
+
+```{r eval=FALSE}
+freq(data=wp_mechpump, 
+     input = 'X_water_tec')
+
+```
+
+### Extracting water points with usage capacity \< 1000
+
+Next we'll extract the data for water points with usage capacity \< 1000.
+
+```{r eval=FALSE}
+wp_use1000l <- wp %>%
+  filter(usage_cap < 1000)
+
+```
+
+Let's check the distribution.
+
+```{r eval=FALSE}
+freq(data=wp_use1000l, 
+     input = 'usage_cap')
+
+```
+
+### Extracting water points with usage capacity \>= 1000
+
+Next we'll extract the data for water points with usage capacity \>= 1000.
+
+```{r eval=FALSE}
+wp_use1000m <- wp %>%
+  filter(usage_cap >= 1000)
+
+```
+
+Let's check the distribution.
+
+```{r eval=FALSE}
+freq(data=wp_use1000m, 
+     input = 'usage_cap')
+
+```
+
+### Extracting rural water points
+
+Next we'll extract the data for rural water points.
+
+```{r eval=FALSE}
+wp_rural <- wp %>%
+  filter(is_urban == 'False')
+
+```
+
+Let's check the distribution.
+
+```{r eval=FALSE}
+freq(data=wp_rural, 
+     input = 'is_urban')
+
+```
+
+### Extracting community managed water points
+
+Next we'll extract the data for community managed water points.
+
+```{r eval=FALSE}
+wp_comm <- wp %>%
+  filter(manageme_2 == 'Community Management')
+
+```
+
+Let's check the distribution.
+
+```{r eval=FALSE}
+freq(data=wp_comm, 
+     input = 'manageme_2')
+
+```
+
+### Extracting government managed water points
+
+Next we'll extract the data for government managed water points.
+
+```{r eval=FALSE}
+wp_gov <- wp %>%
+  filter(manageme_2 == 'Direct Government Operation')
+
+```
+
+Let's check the distribution.
+
+```{r eval=FALSE}
+freq(data=wp_gov, 
+     input = 'manageme_2')
+
+```
+
+### Extracting water points managed by other institutes
+
+Next we'll extract the data for water points managed by other institutes.
+
+```{r eval=FALSE}
+wp_othmanage <- wp %>%
+  filter(manageme_2 %in%
+           c("Health Care Facility", 
+             "Other",
+             "Other Institutional Management",
+             "Private Operator/Delegated Management",
+             "School Management"))
+
+```
+
+Let's check the distribution.
+
+```{r eval=FALSE}
+freq(data=wp_othmanage, 
+     input = 'manageme_2')
+
+```
+
+## Performing Point-in-Polygon Count
+
+Next we'll count the number of water points regarding the above attributes in each polygon, and join the counts with the geoboundary data.
+
+```{r eval=FALSE}
+nga_wp <- nga_new %>% 
+  mutate(`total wpt` = lengths(
+    st_intersects(nga, wp))) %>%
+  mutate(`wpt functional` = lengths(
+    st_intersects(nga, wp_functional))) %>%
+  mutate(`wpt non-functional` = lengths(
+    st_intersects(nga, wp_nonfunctional))) %>%
+  mutate(`wpt hand pump` = lengths(
+    st_intersects(nga, wp_handpump))) %>%
+  mutate(`wpt mechanized pump` = lengths(
+    st_intersects(nga, wp_mechpump))) %>%
+  mutate(`wpt cap 1000 less` = lengths(
+    st_intersects(nga, wp_use1000l))) %>%
+  mutate(`wpt cap 1000 more` = lengths(
+    st_intersects(nga, wp_use1000m))) %>%
+  mutate(`wpt rural` = lengths(
+    st_intersects(nga, wp_rural))) %>%
+  mutate(`wpt manage community` = lengths(
+    st_intersects(nga, wp_comm))) %>%
+  mutate(`wpt manage government` = lengths(
+    st_intersects(nga, wp_gov))) %>%
+  mutate(`wpt manage other` = lengths(
+    st_intersects(nga, wp_othmanage)))
+
+```
+
+Next we'll compute the percentage of the attributes as the absolute counts may lead to biased results.
+
+```{r eval=FALSE}
+nga_wp <- nga_wp %>%
+  mutate(`pct_functional` = `wpt functional`/`total wpt`) %>%
+  mutate(`pct_non-functional` = `wpt non-functional`/`total wpt`) %>%
+  mutate(`pct_handpump` = `wpt hand pump`/`total wpt`) %>%
+  mutate(`pct_mechanizedpump` = `wpt mechanized pump`/`total wpt`) %>%
+  mutate(`pct_capacity1000less` = `wpt cap 1000 less`/`total wpt`) %>%
+  mutate(`pct_capacity1000more` = `wpt cap 1000 more`/`total wpt`) %>%
+  mutate(`pct_rural` = `wpt rural`/`total wpt`) %>%
+  mutate(`pct_communitymanaged` = `wpt manage community`/`total wpt`) %>%
+  mutate(`pct_governmentmanaged` = `wpt manage government`/`total wpt`) %>%
+  mutate(`pct_othermanaged` = `wpt manage other`/`total wpt`) 
+
+```
+
+## Saving the Analytical Data Table
+
+Now we have prepared our analytical data table, and let's save it for subsequent uses.
+
+```{r eval=FALSE}
+write_rds(nga_wp, "data/nga_wp.rds")
+
+```
