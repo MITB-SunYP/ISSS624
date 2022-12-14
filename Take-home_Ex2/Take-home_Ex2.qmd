@@ -1,0 +1,269 @@
+---
+title: "Take-home Exercise 2: Regionalisation of Multivariate Water Point Attributes with Non-spatially Constrained and Spatially Constrained Clustering Methods"
+editor: visual
+---
+
+## Background
+
+Clustering analysis is a commonly used technique to find clusters among a population using different attributes. For example, the population of a country or region, the user market of a product, or the signals from some IoT devices.
+
+Have you ever wondered if we could cluster regions? For example, are there any clusters among all the planning area in Singapore based on the attributes of interest? If we could find such clusters, then it might help business organizations to run targeted marketing campaigns or it could help the government to set better policies.
+
+In this exercise, we'll apply different clustering methodologies to find clusters in Nigeria using their water point information as water supply is a major concern in the country. With this study, we hope to understand which region is facing severe water issues.
+
+## Problem Statement
+
+-   Apply conventional hierarchical clustering method to regionalize Nigeria using appropriate water point information
+-   Apply spatially constrained clustering method to regionalize Nigeria using appropriate water point information
+-   Information could be used to discover the clusters are:
+    -   Total number of functional water points
+
+    -   Total number of nonfunctional water points
+
+    -   Percentage of functional water points
+
+    -   Percentage of non-functional water points
+
+    -   Percentage of main water point technology (i.e. Hand Pump)
+
+    -   Percentage of usage capacity (i.e. \< 1000, \>=1000)
+
+    -   Percentage of rural water points
+
+## Getting Started
+
+### Data sources
+
+-   **Aspatial Data**
+
+A set of a spatial data containing the water point related information is downloaded from [Water Point Data Exchange (WPdx)](https://data.waterpointdata.org/dataset/Water-Point-Data-Exchange-Plus-WPdx-/eqje-vguj/data) website.
+
+The original data set contains the data from 17 countries, and only the subset of Nigeria is used for the analysis in this exercise.
+
+-   **Geospatial Data**
+
+Nigeria Level-2 Administrative Boundary polygon features GIS data downloaded from [geoBoundaries](https://www.geoboundaries.org/) will be used in this exercise.
+
+### Loading R Packages
+
+First of all, let's load the required R packages into R:
+
+-   **sf**: importing, managing and processing geospatial data.
+-   **spdep**: computing spatial weights and spatially lagged variables.
+-   **tmap**: plotting Thematic Maps.
+-   **tidyverse**: importing, wrangling and visualizing data. It consists of a family of R packages, including **readr**, **readxl**, **tidyr**, **dplyr** and **ggplot2**.
+-   **rgdal**: handling geospatial data
+-   **ggpubr:** facilitating **ggplot2** to make more visually appealing charts
+-   **cluster:** performing cluster analysis
+-   **factoextra:** extracting and visualizing the output of multivariate data analyses
+-   **NbClust:** determining the best number of clusters in a data set
+-   **heatmaply:** creating interactive cluster heatmaps
+-   **corrplot:** plotting correlation matrix
+-   **psych:** handling multivariate analysis
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse, rgdal, ggpubr, cluster, factoextra, NbClust, heatmaply, corrplot, psych)
+
+```
+
+### Importing Data
+
+**Importing water point geospatial data**
+
+Let's import the water point geospatial data into R as a point feature data frame.
+
+```{r eval=FALSE}
+wp <- st_read(dsn = "data/geo_export",
+              layer = "geo_export",
+              crs = 4326) %>%
+  filter(clean_coun == "Nigeria")
+```
+
+There are a total of 406,566 features and 72 fields in the wp point feature data frame, and it's in WGS 84 coordinate system.
+
+**Importing Nigeria LGA boundary data**
+
+Now we'll import the LGA boundary data into R as a polygon feature data frame.
+
+```{r}
+nga <- st_read(dsn = "Data/geoBoundaries-NGA-ADM2-all",
+               layer = "geoBoundaries-NGA-ADM2")
+
+```
+
+There are a total of 774 features and 5 fields in the nga multipolygon feature data frame, and it's also in WGS 84 coordinate system.
+
+## Data Wrangling
+
+### Nigeria LGA boundary data
+
+Let's first take a look at the data structure to check if the data is imported correctly.
+
+```{r}
+glimpse(nga)
+
+```
+
+It seems that the data is in a good shape. Next, let's check if there is any duplicated polygons as they are supposed to be unique.
+
+```{r}
+n_occur <- data.frame(table(nga$shapeName))
+n_occur[n_occur$Freq > 1,]
+nga[nga$shapeName %in% n_occur$Var1[n_occur$Freq > 1], ]
+
+```
+
+Indeed, the table above shows that there are 6 pairs of duplicated polygons. However, they have different geometry values which suggests they are not the same regions.
+
+Let's view those polygons with duplicated shapename in the map to validate our findings.
+
+```{r}
+nga_new <- left_join(nga, n_occur, by = c("shapeName" = "Var1"))
+
+tm_shape(nga_new) +
+  tm_polygons("Freq")
+
+```
+
+The polygons highlighted in orange are the ones with duplicate shapename. Indeed, those polygons are different regions in Nigeria. Let's label the polygons with shapeID for easy identification.
+
+```{r}
+tm_shape(nga_new) +
+  tm_polygons() +
+  tm_shape(filter(nga_new, Freq == 2)) +
+  tm_polygons("shapeID") +
+  tm_legend(legend.outside=TRUE)
+
+```
+
+By referencing to cirad Aware webpage for **Nigeria administrative boundaries (level 2)** ([link](https://aware.cirad.fr/layers/geonode:nigeria_adminboundaries_adm2_20170222_32631)) which is an interactive webpage to view geospatial data, we are able to identify the correct names for the polygons.
+
++----------------------------+--------------------+---------------------+
+| shapeID                    | Original shapeName | Correct shapeName   |
++============================+====================+=====================+
+| NGA-ADM2-72505758B95534398 | Bassa              | Bassa (Kogi)        |
++----------------------------+--------------------+---------------------+
+| NGA-ADM2-72505758B52690633 | Bassa              | Bassa (Plateau)     |
++----------------------------+--------------------+---------------------+
+| NGA-ADM2-72505758B26581542 | Ifelodun           | Ifelodun (Kwara)    |
++----------------------------+--------------------+---------------------+
+| NGA-ADM2-72505758B18326272 | Ifelodun           | Ifelodun (Osun)     |
++----------------------------+--------------------+---------------------+
+| NGA-ADM2-72505758B75034141 | Irepodun           | Irepodun (Kwara)    |
++----------------------------+--------------------+---------------------+
+| NGA-ADM2-72505758B79178637 | Irepodun           | Irepodun (Osun)     |
++----------------------------+--------------------+---------------------+
+| NGA-ADM2-72505758B6786568  | Nasarawa           | Nasarawa (Kano)     |
++----------------------------+--------------------+---------------------+
+| NGA-ADM2-72505758B67188591 | Nasarawa           | Nasarawa (Nasarawa) |
++----------------------------+--------------------+---------------------+
+| NGA-ADM2-72505758B7318634  | Obi                | Obi (Benue)         |
++----------------------------+--------------------+---------------------+
+| NGA-ADM2-72505758B3073896  | Obi                | Obi (Nasarawa)      |
++----------------------------+--------------------+---------------------+
+| NGA-ADM2-72505758B6675111  | Surulere           | Surulere (Lagos)    |
++----------------------------+--------------------+---------------------+
+| NGA-ADM2-72505758B31597260 | Surulere           | Surulere (Oyo)      |
++----------------------------+--------------------+---------------------+
+
+: Now, let's rectify the shape names for the 6 pairs of polygons with duplicated names.
+
+```{r}
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B95534398"] <- "Bassa (Kogi)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B52690633"] <- "Bassa (Plateau)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B26581542"] <- "Ifelodun (Kwara)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B18326272"] <- "Ifelodun (Osun)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B75034141"] <- "Irepodun (Kwara)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B79178637"] <- "Irepodun (Osun)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B6786568"] <- "Nasarawa (Kano)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B67188591"] <- "Nasarawa (Nasarawa)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B7318634"] <- "Obi (Benue)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B3073896"] <- "Obi (Nasarawa)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B6675111"] <- "Surulere (Lagos)"
+nga_new$shapeName[nga_new$shapeID == "NGA-ADM2-72505758B31597260"] <- "Surulere (Oyo)"
+
+nga_new <- nga_new[, 1:5]
+
+```
+
+Let's check if the shape names are unique now.
+
+```{r}
+n_occur <- data.frame(table(nga_new$shapeName))
+n_occur[n_occur$Freq > 1,]
+nga_new[nga_new$shapeName %in% n_occur$Var1[n_occur$Freq > 1], ]
+
+```
+
+The report above shows that there isn't any duplicated shapename in the data frame now.
+
+### Water point geospatial data
+
+Let's now check if the water point data is imported correctly.
+
+```{r eval=FALSE}
+glimpse(wp)
+
+```
+
+It seems that the data is imported properly. However, there are NA values in the character columns. Therefore, we need to recode them into Unknown for better interpretation.
+
+### **Recoding NA values into string**
+
+Let's recode NA in all the character columns into Unknown.
+
+```{r eval=FALSE}
+wp <- wp %>%
+  mutate_if(is.character, ~replace_na(., "Unknown"))
+
+```
+
+```{r eval=FALSE}
+glimpse(wp)
+
+```
+
+### **Drop non-useful columns**
+
+There are a total 73 columns in the wp feature data frame, but we don't need all of them in the clustering analysis. In this exercise, we'll focus on the attributes in the table below.
+
++------------------------------------------------------------+-------------+-------------------------------------------+
+| Attributes                                                 | Column Name | Levels in Column                          |
++============================================================+=============+===========================================+
+| -   Total number of functional water points                | status_cle  | -   Abandoned                             |
+| -   Total number of nonfunctional water points             |             | -   Abandoned/Decommissioned              |
+| -   Percentage of functional water points                  |             | -   Functional                            |
+| -   Percentage of nonfunctional water points               |             | -   Functional but needs repair           |
+|                                                            |             | -   Functional but not in use             |
+|                                                            |             | -   Non-Functional                        |
+|                                                            |             | -   Non-Functional due to dry season      |
+|                                                            |             | -   Non functional due to dry season      |
+|                                                            |             | -   Unknown                               |
++------------------------------------------------------------+-------------+-------------------------------------------+
+| Percentage of main water point technology (i.e. Hand Pump) | X_water_tec | -   Hand Pump                             |
+|                                                            |             | -   Mechanized Pump                       |
+|                                                            |             | -   Rope and Bucket                       |
+|                                                            |             | -   Tapstand                              |
+|                                                            |             | -   Unknown                               |
++------------------------------------------------------------+-------------+-------------------------------------------+
+| Percentage of usage capacity (i.e. \< 1000, \>=1000)       | usage_cap   |                                           |
++------------------------------------------------------------+-------------+-------------------------------------------+
+| Percentage of rural water points                           | is_urban    | -   True                                  |
+|                                                            |             | -   False                                 |
++------------------------------------------------------------+-------------+-------------------------------------------+
+| Percentage of water source                                 | water_so_2  | -   Piped Water                           |
+|                                                            |             | -   Spring                                |
+|                                                            |             | -   Well                                  |
+|                                                            |             | -   Unknown                               |
++------------------------------------------------------------+-------------+-------------------------------------------+
+| Percentage of management institute                         | manageme_2  | -   Community Management                  |
+|                                                            |             | -   Direct Government Operation           |
+|                                                            |             | -   Health Care Facility                  |
+|                                                            |             | -   Other Institutional Management        |
+|                                                            |             | -   Private Operator/Delegated Management |
+|                                                            |             | -   School Management                     |
+|                                                            |             | -   Other                                 |
+|                                                            |             | -   Unknown                               |
++------------------------------------------------------------+-------------+-------------------------------------------+
+
+### Exploratory Data Analysis (EDA)

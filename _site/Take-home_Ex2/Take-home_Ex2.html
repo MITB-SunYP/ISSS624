@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.1.189">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>ISSS624 - Take-home Exercise 2: Regionalisation of Multivariate Water Point Attributes with Non-spatially Constrained and Spatially Constrained Clustering Methods</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">ISSS624</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-hands-on-exercise" role="button" data-bs-toggle="dropdown" aria-expanded="false">Hands-on Exercise</a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-hands-on-exercise">    
+        <li>
+    <a class="dropdown-item" href="../Chap_1-2/Hands-on_Ex1.html">
+ <span class="dropdown-text">Hands-on Exercise 1</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../Chap_3-4/Hands-on_Ex2.html">
+ <span class="dropdown-text">Hands-on Exercise 2</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../Chap_5/Hands-on_Ex3.html">
+ <span class="dropdown-text">Hands-on Exercise 3</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../Chap_6/Hands-on_Ex4.html">
+ <span class="dropdown-text">Hands-on Exercise 4</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-in-class-exercise" role="button" data-bs-toggle="dropdown" aria-expanded="false">In-class Exercise</a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-in-class-exercise">    
+        <li>
+    <a class="dropdown-item" href="../Chap_3-4/In-class_Ex1.html">
+ <span class="dropdown-text">In-class Exercise 1</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../Take-home_Ex1/In-class_Ex2.html">
+ <span class="dropdown-text">In-class Exercise 2</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../Chap_5/In-class_Ex3.html">
+ <span class="dropdown-text">In-class Exercise 3</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../Chap_6/In-class_Ex4.html">
+ <span class="dropdown-text">In-class Exercise 4</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-take-home-exercise" role="button" data-bs-toggle="dropdown" aria-expanded="false">Take-home Exercise</a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-take-home-exercise">    
+        <li>
+    <a class="dropdown-item" href="../Take-home_Ex1/Take-home_Ex1.html">
+ <span class="dropdown-text">Take-home Exercise 1</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../Take-home_Ex2/Take-home_Ex2.html">
+ <span class="dropdown-text">Take-home Exercise 2</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html">About</a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#background" id="toc-background" class="nav-link active" data-scroll-target="#background">Background</a></li>
+  <li><a href="#problem-statement" id="toc-problem-statement" class="nav-link" data-scroll-target="#problem-statement">Problem Statement</a></li>
+  <li><a href="#getting-started" id="toc-getting-started" class="nav-link" data-scroll-target="#getting-started">Getting Started</a>
+  <ul class="collapse">
+  <li><a href="#data-sources" id="toc-data-sources" class="nav-link" data-scroll-target="#data-sources">Data sources</a></li>
+  <li><a href="#loading-r-packages" id="toc-loading-r-packages" class="nav-link" data-scroll-target="#loading-r-packages">Loading R Packages</a></li>
+  <li><a href="#importing-data" id="toc-importing-data" class="nav-link" data-scroll-target="#importing-data">Importing Data</a></li>
+  </ul></li>
+  <li><a href="#data-wrangling" id="toc-data-wrangling" class="nav-link" data-scroll-target="#data-wrangling">Data Wrangling</a>
+  <ul class="collapse">
+  <li><a href="#nigeria-lga-boundary-data" id="toc-nigeria-lga-boundary-data" class="nav-link" data-scroll-target="#nigeria-lga-boundary-data">Nigeria LGA boundary data</a></li>
+  <li><a href="#water-point-geospatial-data" id="toc-water-point-geospatial-data" class="nav-link" data-scroll-target="#water-point-geospatial-data">Water point geospatial data</a></li>
+  <li><a href="#recoding-na-values-into-string" id="toc-recoding-na-values-into-string" class="nav-link" data-scroll-target="#recoding-na-values-into-string"><strong>Recoding NA values into string</strong></a></li>
+  <li><a href="#drop-non-useful-columns" id="toc-drop-non-useful-columns" class="nav-link" data-scroll-target="#drop-non-useful-columns"><strong>Drop non-useful columns</strong></a></li>
+  <li><a href="#exploratory-data-analysis-eda" id="toc-exploratory-data-analysis-eda" class="nav-link" data-scroll-target="#exploratory-data-analysis-eda">Exploratory Data Analysis (EDA)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Take-home Exercise 2: Regionalisation of Multivariate Water Point Attributes with Non-spatially Constrained and Spatially Constrained Clustering Methods</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    
+  </div>
+  
+
+</header>
+
+<section id="background" class="level2">
+<h2 class="anchored" data-anchor-id="background">Background</h2>
+<p>Clustering analysis is a commonly used technique to find clusters among a population using different attributes. For example, the population of a country or region, the user market of a product, or the signals from some IoT devices.</p>
+<p>Have you ever wondered if we could cluster regions? For example, are there any clusters among all the planning area in Singapore based on the attributes of interest? If we could find such clusters, then it might help business organizations to run targeted marketing campaigns or it could help the government to set better policies.</p>
+<p>In this exercise, we’ll apply different clustering methodologies to find clusters in Nigeria using their water point information as water supply is a major concern in the country. With this study, we hope to understand which region is facing severe water issues.</p>
+</section>
+<section id="problem-statement" class="level2">
+<h2 class="anchored" data-anchor-id="problem-statement">Problem Statement</h2>
+<ul>
+<li>Apply conventional hierarchical clustering method to regionalize Nigeria using appropriate water point information</li>
+<li>Apply spatially constrained clustering method to regionalize Nigeria using appropriate water point information</li>
+<li>Information could be used to discover the clusters are:
+<ul>
+<li><p>Total number of functional water points</p></li>
+<li><p>Total number of nonfunctional water points</p></li>
+<li><p>Percentage of functional water points</p></li>
+<li><p>Percentage of non-functional water points</p></li>
+<li><p>Percentage of main water point technology (i.e.&nbsp;Hand Pump)</p></li>
+<li><p>Percentage of usage capacity (i.e.&nbsp;&lt; 1000, &gt;=1000)</p></li>
+<li><p>Percentage of rural water points</p></li>
+</ul></li>
+</ul>
+</section>
+<section id="getting-started" class="level2">
+<h2 class="anchored" data-anchor-id="getting-started">Getting Started</h2>
+<section id="data-sources" class="level3">
+<h3 class="anchored" data-anchor-id="data-sources">Data sources</h3>
+<ul>
+<li><strong>Aspatial Data</strong></li>
+</ul>
+<p>A set of a spatial data containing the water point related information is downloaded from <a href="https://data.waterpointdata.org/dataset/Water-Point-Data-Exchange-Plus-WPdx-/eqje-vguj/data">Water Point Data Exchange (WPdx)</a> website.</p>
+<p>The original data set contains the data from 17 countries, and only the subset of Nigeria is used for the analysis in this exercise.</p>
+<ul>
+<li><strong>Geospatial Data</strong></li>
+</ul>
+<p>Nigeria Level-2 Administrative Boundary polygon features GIS data downloaded from <a href="https://www.geoboundaries.org/">geoBoundaries</a> will be used in this exercise.</p>
+</section>
+<section id="loading-r-packages" class="level3">
+<h3 class="anchored" data-anchor-id="loading-r-packages">Loading R Packages</h3>
+<p>First of all, let’s load the required R packages into R:</p>
+<ul>
+<li><strong>sf</strong>: importing, managing and processing geospatial data.</li>
+<li><strong>spdep</strong>: computing spatial weights and spatially lagged variables.</li>
+<li><strong>tmap</strong>: plotting Thematic Maps.</li>
+<li><strong>tidyverse</strong>: importing, wrangling and visualizing data. It consists of a family of R packages, including <strong>readr</strong>, <strong>readxl</strong>, <strong>tidyr</strong>, <strong>dplyr</strong> and <strong>ggplot2</strong>.</li>
+<li><strong>rgdal</strong>: handling geospatial data</li>
+<li><strong>ggpubr:</strong> facilitating <strong>ggplot2</strong> to make more visually appealing charts</li>
+<li><strong>cluster:</strong> performing cluster analysis</li>
+<li><strong>factoextra:</strong> extracting and visualizing the output of multivariate data analyses</li>
+<li><strong>NbClust:</strong> determining the best number of clusters in a data set</li>
+<li><strong>heatmaply:</strong> creating interactive cluster heatmaps</li>
+<li><strong>corrplot:</strong> plotting correlation matrix</li>
+<li><strong>psych:</strong> handling multivariate analysis</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(sf, spdep, tmap, tidyverse, rgdal, ggpubr, cluster, factoextra, NbClust, heatmaply, corrplot, psych)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="importing-data" class="level3">
+<h3 class="anchored" data-anchor-id="importing-data">Importing Data</h3>
+<p><strong>Importing water point geospatial data</strong></p>
+<p>Let’s import the water point geospatial data into R as a point feature data frame.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>wp <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"data/geo_export"</span>,</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>              <span class="at">layer =</span> <span class="st">"geo_export"</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>              <span class="at">crs =</span> <span class="dv">4326</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(clean_coun <span class="sc">==</span> <span class="st">"Nigeria"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>There are a total of 406,566 features and 72 fields in the wp point feature data frame, and it’s in WGS 84 coordinate system.</p>
+<p><strong>Importing Nigeria LGA boundary data</strong></p>
+<p>Now we’ll import the LGA boundary data into R as a polygon feature data frame.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>nga <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"Data/geoBoundaries-NGA-ADM2-all"</span>,</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">layer =</span> <span class="st">"geoBoundaries-NGA-ADM2"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `geoBoundaries-NGA-ADM2' from data source 
+  `D:\MITB_SunYP\ISSS624\Take-home_Ex2\data\geoBoundaries-NGA-ADM2-all' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 774 features and 5 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: 2.668534 ymin: 4.273007 xmax: 14.67882 ymax: 13.89442
+Geodetic CRS:  WGS 84</code></pre>
+</div>
+</div>
+<p>There are a total of 774 features and 5 fields in the nga multipolygon feature data frame, and it’s also in WGS 84 coordinate system.</p>
+</section>
+</section>
+<section id="data-wrangling" class="level2">
+<h2 class="anchored" data-anchor-id="data-wrangling">Data Wrangling</h2>
+<section id="nigeria-lga-boundary-data" class="level3">
+<h3 class="anchored" data-anchor-id="nigeria-lga-boundary-data">Nigeria LGA boundary data</h3>
+<p>Let’s first take a look at the data structure to check if the data is imported correctly.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(nga)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 774
+Columns: 6
+$ shapeName  &lt;chr&gt; "Aba North", "Aba South", "Abadam", "Abaji", "Abak", "Abaka…
+$ Level      &lt;chr&gt; "ADM2", "ADM2", "ADM2", "ADM2", "ADM2", "ADM2", "ADM2", "AD…
+$ shapeID    &lt;chr&gt; "NGA-ADM2-72505758B79815894", "NGA-ADM2-72505758B67905963",…
+$ shapeGroup &lt;chr&gt; "NGA", "NGA", "NGA", "NGA", "NGA", "NGA", "NGA", "NGA", "NG…
+$ shapeType  &lt;chr&gt; "ADM2", "ADM2", "ADM2", "ADM2", "ADM2", "ADM2", "ADM2", "AD…
+$ geometry   &lt;MULTIPOLYGON [°]&gt; MULTIPOLYGON (((7.401109 5...., MULTIPOLYGON (…</code></pre>
+</div>
+</div>
+<p>It seems that the data is in a good shape. Next, let’s check if there is any duplicated polygons as they are supposed to be unique.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>n_occur <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">table</span>(nga<span class="sc">$</span>shapeName))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>n_occur[n_occur<span class="sc">$</span>Freq <span class="sc">&gt;</span> <span class="dv">1</span>,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        Var1 Freq
+94     Bassa    2
+303 Ifelodun    2
+353 Irepodun    2
+516 Nasarawa    2
+542      Obi    2
+688 Surulere    2</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>nga[nga<span class="sc">$</span>shapeName <span class="sc">%in%</span> n_occur<span class="sc">$</span>Var1[n_occur<span class="sc">$</span>Freq <span class="sc">&gt;</span> <span class="dv">1</span>], ]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Simple feature collection with 12 features and 5 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: 3.316459 ymin: 6.459038 xmax: 9.020704 ymax: 12.05035
+Geodetic CRS:  WGS 84
+First 10 features:
+    shapeName Level                    shapeID shapeGroup shapeType
+94      Bassa  ADM2 NGA-ADM2-72505758B95534398        NGA      ADM2
+95      Bassa  ADM2 NGA-ADM2-72505758B52690633        NGA      ADM2
+304  Ifelodun  ADM2 NGA-ADM2-72505758B26581542        NGA      ADM2
+305  Ifelodun  ADM2 NGA-ADM2-72505758B18326272        NGA      ADM2
+355  Irepodun  ADM2 NGA-ADM2-72505758B75034141        NGA      ADM2
+356  Irepodun  ADM2 NGA-ADM2-72505758B79178637        NGA      ADM2
+519  Nasarawa  ADM2  NGA-ADM2-72505758B6786568        NGA      ADM2
+520  Nasarawa  ADM2 NGA-ADM2-72505758B67188591        NGA      ADM2
+546       Obi  ADM2  NGA-ADM2-72505758B7318634        NGA      ADM2
+547       Obi  ADM2  NGA-ADM2-72505758B3073896        NGA      ADM2
+                          geometry
+94  MULTIPOLYGON (((6.708541 7....
+95  MULTIPOLYGON (((8.823522 10...
+304 MULTIPOLYGON (((4.664107 8....
+305 MULTIPOLYGON (((4.721977 7....
+355 MULTIPOLYGON (((5.05493 8.0...
+356 MULTIPOLYGON (((4.543349 7....
+519 MULTIPOLYGON (((8.554589 11...
+520 MULTIPOLYGON (((7.493228 8....
+546 MULTIPOLYGON (((8.191919 6....
+547 MULTIPOLYGON (((9.008576 8....</code></pre>
+</div>
+</div>
+<p>Indeed, the table above shows that there are 6 pairs of duplicated polygons. However, they have different geometry values which suggests they are not the same regions.</p>
+<p>Let’s view those polygons with duplicated shapename in the map to validate our findings.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>nga_new <span class="ot">&lt;-</span> <span class="fu">left_join</span>(nga, n_occur, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"shapeName"</span> <span class="ot">=</span> <span class="st">"Var1"</span>))</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(nga_new) <span class="sc">+</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="st">"Freq"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Take-home_Ex2_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>The polygons highlighted in orange are the ones with duplicate shapename. Indeed, those polygons are different regions in Nigeria. Let’s label the polygons with shapeID for easy identification.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(nga_new) <span class="sc">+</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>() <span class="sc">+</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(<span class="fu">filter</span>(nga_new, Freq <span class="sc">==</span> <span class="dv">2</span>)) <span class="sc">+</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="st">"shapeID"</span>) <span class="sc">+</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_legend</span>(<span class="at">legend.outside=</span><span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Legend labels were too wide. The labels have been resized to 0.62, 0.62, 0.64, 0.62, 0.62, 0.64, 0.62, 0.64, 0.64, 0.62, 0.62, 0.62. Increase legend.width (argument of tm_layout) to make the legend wider and therefore the labels larger.</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="Take-home_Ex2_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>By referencing to cirad Aware webpage for <strong>Nigeria administrative boundaries (level 2)</strong> (<a href="https://aware.cirad.fr/layers/geonode:nigeria_adminboundaries_adm2_20170222_32631">link</a>) which is an interactive webpage to view geospatial data, we are able to identify the correct names for the polygons.</p>
+<table class="table">
+<caption>Now, let’s rectify the shape names for the 6 pairs of polygons with duplicated names.</caption>
+<colgroup>
+<col style="width: 39%">
+<col style="width: 28%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>shapeID</th>
+<th>Original shapeName</th>
+<th>Correct shapeName</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>NGA-ADM2-72505758B95534398</td>
+<td>Bassa</td>
+<td>Bassa (Kogi)</td>
+</tr>
+<tr class="even">
+<td>NGA-ADM2-72505758B52690633</td>
+<td>Bassa</td>
+<td>Bassa (Plateau)</td>
+</tr>
+<tr class="odd">
+<td>NGA-ADM2-72505758B26581542</td>
+<td>Ifelodun</td>
+<td>Ifelodun (Kwara)</td>
+</tr>
+<tr class="even">
+<td>NGA-ADM2-72505758B18326272</td>
+<td>Ifelodun</td>
+<td>Ifelodun (Osun)</td>
+</tr>
+<tr class="odd">
+<td>NGA-ADM2-72505758B75034141</td>
+<td>Irepodun</td>
+<td>Irepodun (Kwara)</td>
+</tr>
+<tr class="even">
+<td>NGA-ADM2-72505758B79178637</td>
+<td>Irepodun</td>
+<td>Irepodun (Osun)</td>
+</tr>
+<tr class="odd">
+<td>NGA-ADM2-72505758B6786568</td>
+<td>Nasarawa</td>
+<td>Nasarawa (Kano)</td>
+</tr>
+<tr class="even">
+<td>NGA-ADM2-72505758B67188591</td>
+<td>Nasarawa</td>
+<td>Nasarawa (Nasarawa)</td>
+</tr>
+<tr class="odd">
+<td>NGA-ADM2-72505758B7318634</td>
+<td>Obi</td>
+<td>Obi (Benue)</td>
+</tr>
+<tr class="even">
+<td>NGA-ADM2-72505758B3073896</td>
+<td>Obi</td>
+<td>Obi (Nasarawa)</td>
+</tr>
+<tr class="odd">
+<td>NGA-ADM2-72505758B6675111</td>
+<td>Surulere</td>
+<td>Surulere (Lagos)</td>
+</tr>
+<tr class="even">
+<td>NGA-ADM2-72505758B31597260</td>
+<td>Surulere</td>
+<td>Surulere (Oyo)</td>
+</tr>
+</tbody>
+</table>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>nga_new<span class="sc">$</span>shapeName[nga_new<span class="sc">$</span>shapeID <span class="sc">==</span> <span class="st">"NGA-ADM2-72505758B95534398"</span>] <span class="ot">&lt;-</span> <span class="st">"Bassa (Kogi)"</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>nga_new<span class="sc">$</span>shapeName[nga_new<span class="sc">$</span>shapeID <span class="sc">==</span> <span class="st">"NGA-ADM2-72505758B52690633"</span>] <span class="ot">&lt;-</span> <span class="st">"Bassa (Plateau)"</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>nga_new<span class="sc">$</span>shapeName[nga_new<span class="sc">$</span>shapeID <span class="sc">==</span> <span class="st">"NGA-ADM2-72505758B26581542"</span>] <span class="ot">&lt;-</span> <span class="st">"Ifelodun (Kwara)"</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>nga_new<span class="sc">$</span>shapeName[nga_new<span class="sc">$</span>shapeID <span class="sc">==</span> <span class="st">"NGA-ADM2-72505758B18326272"</span>] <span class="ot">&lt;-</span> <span class="st">"Ifelodun (Osun)"</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>nga_new<span class="sc">$</span>shapeName[nga_new<span class="sc">$</span>shapeID <span class="sc">==</span> <span class="st">"NGA-ADM2-72505758B75034141"</span>] <span class="ot">&lt;-</span> <span class="st">"Irepodun (Kwara)"</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>nga_new<span class="sc">$</span>shapeName[nga_new<span class="sc">$</span>shapeID <span class="sc">==</span> <span class="st">"NGA-ADM2-72505758B79178637"</span>] <span class="ot">&lt;-</span> <span class="st">"Irepodun (Osun)"</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>nga_new<span class="sc">$</span>shapeName[nga_new<span class="sc">$</span>shapeID <span class="sc">==</span> <span class="st">"NGA-ADM2-72505758B6786568"</span>] <span class="ot">&lt;-</span> <span class="st">"Nasarawa (Kano)"</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>nga_new<span class="sc">$</span>shapeName[nga_new<span class="sc">$</span>shapeID <span class="sc">==</span> <span class="st">"NGA-ADM2-72505758B67188591"</span>] <span class="ot">&lt;-</span> <span class="st">"Nasarawa (Nasarawa)"</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>nga_new<span class="sc">$</span>shapeName[nga_new<span class="sc">$</span>shapeID <span class="sc">==</span> <span class="st">"NGA-ADM2-72505758B7318634"</span>] <span class="ot">&lt;-</span> <span class="st">"Obi (Benue)"</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>nga_new<span class="sc">$</span>shapeName[nga_new<span class="sc">$</span>shapeID <span class="sc">==</span> <span class="st">"NGA-ADM2-72505758B3073896"</span>] <span class="ot">&lt;-</span> <span class="st">"Obi (Nasarawa)"</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>nga_new<span class="sc">$</span>shapeName[nga_new<span class="sc">$</span>shapeID <span class="sc">==</span> <span class="st">"NGA-ADM2-72505758B6675111"</span>] <span class="ot">&lt;-</span> <span class="st">"Surulere (Lagos)"</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>nga_new<span class="sc">$</span>shapeName[nga_new<span class="sc">$</span>shapeID <span class="sc">==</span> <span class="st">"NGA-ADM2-72505758B31597260"</span>] <span class="ot">&lt;-</span> <span class="st">"Surulere (Oyo)"</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>nga_new <span class="ot">&lt;-</span> nga_new[, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s check if the shape names are unique now.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>n_occur <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">table</span>(nga_new<span class="sc">$</span>shapeName))</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>n_occur[n_occur<span class="sc">$</span>Freq <span class="sc">&gt;</span> <span class="dv">1</span>,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] Var1 Freq
+&lt;0 rows&gt; (or 0-length row.names)</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>nga_new[nga_new<span class="sc">$</span>shapeName <span class="sc">%in%</span> n_occur<span class="sc">$</span>Var1[n_occur<span class="sc">$</span>Freq <span class="sc">&gt;</span> <span class="dv">1</span>], ]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Simple feature collection with 0 features and 5 fields
+Bounding box:  xmin: NA ymin: NA xmax: NA ymax: NA
+Geodetic CRS:  WGS 84
+[1] shapeName  Level      shapeID    shapeGroup shapeType  geometry  
+&lt;0 rows&gt; (or 0-length row.names)</code></pre>
+</div>
+</div>
+<p>The report above shows that there isn’t any duplicated shapename in the data frame now.</p>
+</section>
+<section id="water-point-geospatial-data" class="level3">
+<h3 class="anchored" data-anchor-id="water-point-geospatial-data">Water point geospatial data</h3>
+<p>Let’s now check if the water point data is imported correctly.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(wp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>It seems that the data is imported properly. However, there are NA values in the character columns. Therefore, we need to recode them into Unknown for better interpretation.</p>
+</section>
+<section id="recoding-na-values-into-string" class="level3">
+<h3 class="anchored" data-anchor-id="recoding-na-values-into-string"><strong>Recoding NA values into string</strong></h3>
+<p>Let’s recode NA in all the character columns into Unknown.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>wp <span class="ot">&lt;-</span> wp <span class="sc">%&gt;%</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_if</span>(is.character, <span class="sc">~</span><span class="fu">replace_na</span>(., <span class="st">"Unknown"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(wp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="drop-non-useful-columns" class="level3">
+<h3 class="anchored" data-anchor-id="drop-non-useful-columns"><strong>Drop non-useful columns</strong></h3>
+<p>There are a total 73 columns in the wp feature data frame, but we don’t need all of them in the clustering analysis. In this exercise, we’ll focus on the attributes in the table below.</p>
+<table class="table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 11%">
+<col style="width: 36%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Attributes</th>
+<th>Column Name</th>
+<th>Levels in Column</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><ul>
+<li>Total number of functional water points</li>
+<li>Total number of nonfunctional water points</li>
+<li>Percentage of functional water points</li>
+<li>Percentage of nonfunctional water points</li>
+</ul></td>
+<td>status_cle</td>
+<td><ul>
+<li>Abandoned</li>
+<li>Abandoned/Decommissioned</li>
+<li>Functional</li>
+<li>Functional but needs repair</li>
+<li>Functional but not in use</li>
+<li>Non-Functional</li>
+<li>Non-Functional due to dry season</li>
+<li>Non functional due to dry season</li>
+<li>Unknown</li>
+</ul></td>
+</tr>
+<tr class="even">
+<td>Percentage of main water point technology (i.e.&nbsp;Hand Pump)</td>
+<td>X_water_tec</td>
+<td><ul>
+<li>Hand Pump</li>
+<li>Mechanized Pump</li>
+<li>Rope and Bucket</li>
+<li>Tapstand</li>
+<li>Unknown</li>
+</ul></td>
+</tr>
+<tr class="odd">
+<td>Percentage of usage capacity (i.e.&nbsp;&lt; 1000, &gt;=1000)</td>
+<td>usage_cap</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Percentage of rural water points</td>
+<td>is_urban</td>
+<td><ul>
+<li>True</li>
+<li>False</li>
+</ul></td>
+</tr>
+<tr class="odd">
+<td>Percentage of water source</td>
+<td>water_so_2</td>
+<td><ul>
+<li>Piped Water</li>
+<li>Spring</li>
+<li>Well</li>
+<li>Unknown</li>
+</ul></td>
+</tr>
+<tr class="even">
+<td>Percentage of management institute</td>
+<td>manageme_2</td>
+<td><ul>
+<li>Community Management</li>
+<li>Direct Government Operation</li>
+<li>Health Care Facility</li>
+<li>Other Institutional Management</li>
+<li>Private Operator/Delegated Management</li>
+<li>School Management</li>
+<li>Other</li>
+<li>Unknown</li>
+</ul></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exploratory-data-analysis-eda" class="level3">
+<h3 class="anchored" data-anchor-id="exploratory-data-analysis-eda">Exploratory Data Analysis (EDA)</h3>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
