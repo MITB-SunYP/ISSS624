@@ -61,9 +61,10 @@ First of all, let's load the required R packages into R:
 -   **corrplot:** plotting correlation matrix
 -   **psych:** handling multivariate analysis
 -   **funModeling**: a tool box for data preparation and exploratory data analysis
+-   **GGally:** extension of ggplot2 to reduce the complexity of combining geometric objects with transformed data
 
 ```{r}
-pacman::p_load(sf, spdep, tmap, tidyverse, rgdal, ggpubr, cluster, factoextra, NbClust, heatmaply, corrplot, psych, funModeling)
+pacman::p_load(sf, spdep, tmap, tidyverse, rgdal, ggpubr, cluster, factoextra, NbClust, heatmaply, corrplot, psych, funModeling, GGally)
 
 ```
 
@@ -593,3 +594,722 @@ Now we have prepared our analytical data table, and let's save it for subsequent
 write_rds(nga_wp, "data/nga_wp.rds")
 
 ```
+
+## Visualizing the Spatial Distribution of Water Points
+
+Let's first import the analytical data table.
+
+```{r}
+nga_wp <- read_rds("data/nga_wp.rds")
+
+```
+
+Next, we'll study the distribution of the new attributes derived earlier, and plot them on the choropleth map to learn their geospatial distribution.
+
+### **Histograms**
+
+```{r fig.height=10, fig.width=10}
+hist_functional <- ggplot(data = nga_wp,
+                          aes(x = `pct_functional`)) +
+  geom_histogram(bins = 20,
+                 color = "black",
+                 fill = "light blue") +
+  ggtitle("Functional Water Points (%)") +
+  theme(plot.title = element_text(size = 10, hjust = 0.5))
+
+hist_nonfunctional <- ggplot(data = nga_wp,
+                          aes(x = `pct_non-functional`)) +
+  geom_histogram(bins = 20,
+                 color = "black",
+                 fill = "light blue") +
+  ggtitle("Non-functional Water Points (%)") +
+  theme(plot.title = element_text(size = 10, hjust = 0.5))
+
+hist_handpump <- ggplot(data = nga_wp,
+                          aes(x = `pct_handpump`)) +
+  geom_histogram(bins = 20,
+                 color = "black",
+                 fill = "light blue") +
+  ggtitle("Hand Pump Water Points (%)") +
+  theme(plot.title = element_text(size = 10, hjust = 0.5))
+
+hist_mechanizedpump <- ggplot(data = nga_wp,
+                          aes(x = `pct_mechanizedpump`)) +
+  geom_histogram(bins = 20,
+                 color = "black",
+                 fill = "light blue") +
+  ggtitle("Mechanized Pump Water Points (%)") +
+  theme(plot.title = element_text(size = 10, hjust = 0.5))
+
+hist_capacity1000less <- ggplot(data = nga_wp,
+                          aes(x = `pct_capacity1000less`)) +
+  geom_histogram(bins = 20,
+                 color = "black",
+                 fill = "light blue") +
+  ggtitle("Water Points with User Capacity < 1000 (%)") +
+  theme(plot.title = element_text(size = 9, hjust = 0.5))
+
+hist_capacity1000more <- ggplot(data = nga_wp,
+                          aes(x = `pct_capacity1000more`)) +
+  geom_histogram(bins = 20,
+                 color = "black",
+                 fill = "light blue") +
+  ggtitle("Water Points with User Capacity >= 1000 (%)") +
+  theme(plot.title = element_text(size = 9, hjust = 0.5))
+
+hist_rural <- ggplot(data = nga_wp,
+                          aes(x = `pct_rural`)) +
+  geom_histogram(bins = 20,
+                 color = "black",
+                 fill = "light blue") +
+  ggtitle("Rural Water Points (%)") +
+  theme(plot.title = element_text(size = 10, hjust = 0.5))
+
+hist_communitymanaged <- ggplot(data = nga_wp,
+                          aes(x = `pct_communitymanaged`)) +
+  geom_histogram(bins = 20,
+                 color = "black",
+                 fill = "light blue") +
+  ggtitle("Community Managed Water Points (%)") +
+  theme(plot.title = element_text(size = 10, hjust = 0.5))
+
+hist_governmentmanaged <- ggplot(data = nga_wp,
+                          aes(x = `pct_governmentmanaged`)) +
+  geom_histogram(bins = 20,
+                 color = "black",
+                 fill = "light blue") +
+  ggtitle("Government Managed Water Points (%)") +
+  theme(plot.title = element_text(size = 10, hjust = 0.5))
+
+hist_othermanaged <- ggplot(data = nga_wp,
+                          aes(x = `pct_othermanaged`)) +
+  geom_histogram(bins = 20,
+                 color = "black",
+                 fill = "light blue") +
+  ggtitle("Water Points Managed by Other Institutes (%)") +
+  theme(plot.title = element_text(size = 10, hjust = 0.5))
+
+ggarrange(hist_functional, 
+          hist_nonfunctional, 
+          hist_handpump, 
+          hist_mechanizedpump, 
+          hist_capacity1000less, 
+          hist_capacity1000more,
+          hist_rural,
+          hist_communitymanaged,
+          hist_governmentmanaged,
+          hist_othermanaged,
+          ncol = 3, 
+          nrow = 4)
+
+```
+
+The plots above reveals the distribution of the newly derived attributes. Some of them slightly resemble normal distribution, but most of them are skewed.
+
+**Slightly resemble normal distribution:**
+
+-   percentage of functional water points
+-   percentage of non-functional water points
+
+**Skewed to the right:**
+
+-   percentage of echanized pump water points
+-   percentage of water points with user capacity \>= 1000
+-   percentage of community managed water points
+-   percentage of government managed water points
+-   percentage of water points managed by other institutes
+
+**Skewed to the left:**
+
+-   percentage of water points with user capacity \< 1000
+-   percentage of rural water points
+
+**Bimodel:**
+
+-   percentage of hand pump water points
+
+### Choropleth Map
+
+Let's also plot the distribution on the geoboundary map.
+
+```{r fig.height=30, fig.width=10}
+map_functional <- tm_shape(nga_wp) +
+  tm_fill(col = "pct_functional",
+          n = 5,
+          style = "jenks",
+          title = "Percentage") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Functional Water Points (%)",
+            title.position = c("center", "top"))
+
+map_nonfunctional <- tm_shape(nga_wp) +
+  tm_fill(col = "pct_non-functional",
+          n = 5,
+          style = "jenks",
+          title = "Percentage") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Non-functional Water Points (%)",
+            title.position = c("center", "top"))
+
+map_handpump <- tm_shape(nga_wp) +
+  tm_fill(col = "pct_handpump",
+          n = 5,
+          style = "jenks",
+          title = "Percentage") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Hand Pump Water Points (%)",
+            title.position = c("center", "top"))
+
+map_mechanizedpump <- tm_shape(nga_wp) +
+  tm_fill(col = "pct_mechanizedpump",
+          n = 5,
+          style = "jenks",
+          title = "Percentage") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Mechanized Pump Water Points (%)",
+            title.position = c("center", "top"))
+
+map_capacity1000less <- tm_shape(nga_wp) +
+  tm_fill(col = "pct_capacity1000less",
+          n = 5,
+          style = "jenks",
+          title = "Percentage") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Water Points with User Capacity < 1000 (%)",
+            title.position = c("center", "top"))
+
+map_capacity1000more <- tm_shape(nga_wp) +
+  tm_fill(col = "pct_capacity1000more",
+          n = 5,
+          style = "jenks",
+          title = "Percentage") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Water Points with User Capacity >= 1000 (%)",
+            title.position = c("center", "top"))
+
+map_rural <- tm_shape(nga_wp) +
+  tm_fill(col = "pct_rural",
+          n = 5,
+          style = "jenks",
+          title = "Percentage") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Rural Water Points (%)",
+            title.position = c("center", "top"))
+
+map_communitymanaged <- tm_shape(nga_wp) +
+  tm_fill(col = "pct_communitymanaged",
+          n = 5,
+          style = "jenks",
+          title = "Percentage") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Community Managed Water Points (%)",
+            title.position = c("center", "top"))
+
+map_governmentmanaged <- tm_shape(nga_wp) +
+  tm_fill(col = "pct_governmentmanaged",
+          n = 5,
+          style = "jenks",
+          title = "Percentage") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Government Managed Water Points (%)",
+            title.position = c("center", "top"))
+
+map_othermanaged <- tm_shape(nga_wp) +
+  tm_fill(col = "pct_othermanaged",
+          n = 5,
+          style = "jenks",
+          title = "Percentage") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Water Points Managed by Other Institutes (%)",
+            title.position = c("center", "top"))
+
+tmap_arrange(map_functional, 
+             map_nonfunctional,
+             map_handpump,
+             map_mechanizedpump,
+             map_capacity1000less,
+             map_capacity1000more,
+             map_rural,
+             map_communitymanaged,
+             map_governmentmanaged,
+             map_othermanaged,
+             asp=0, ncol=2)
+
+```
+
+We could deduce a few interesting findings from the plots above:
+
+-   The water points in the northern part Nigeria are mostly functional, but that in southern part are mostly non-functional.
+-   The water points in the northern part are mostly using hand pump except the regions in the northeast, and most of the water points in the southern part are using mechanized pump.
+-   Similarly, the water points in the northern part are mostly with a smaller user capacity (\< 1000) except the regions in the northeast, but most of the water points in the southern part are with larger user capacity (\> 1000).
+-   Most of the water points in the central regions are managed by community, those in the north-eastern regions are mainly managed by government. The water points in the southern and south-eastern regions are mostly managed by other institute.
+-   Water points in the rural regions are observed across the whole country
+
+## Correlation Analysis
+
+Before we perform the clustering analysis, we need to check if any of the interested attributes are strongly correlated. We could construct a correlation matrix to check.
+
+```{r fig.height=10, fig.width=10}
+cluster_vars <- nga_wp %>% st_set_geometry(NULL)
+cluster_vars.cor = cor(cluster_vars[,17:26], use = "complete.obs")
+corrplot.mixed(cluster_vars.cor,
+         lower = "ellipse", 
+               upper = "number",
+               tl.pos = "lt",
+               diag = "l",
+               tl.col = "black")
+
+```
+
+The correlation matrix reveals that the technology used at the water points are strongly correlated with their user capacity. Therefore, we'll exclude the user capacity variables and mechanized pump variable in the clustering analysis. In other words, the following variables will not be used:
+
+-   pct_mechanizedpump
+-   pct_capacity1000less
+-   pct_capacity1000more
+
+## Hierarchy Cluster Analysis
+
+Now, we are ready to apply the clustering analysis.
+
+### Extracting clustering variables
+
+Let's first extract the variables that will be used in clustering analysis.
+
+```{r}
+cluster_vars <- cluster_vars %>% select("shapeName",
+                                        "pct_functional",
+                                        "pct_non-functional",
+                                        "pct_handpump",
+                                        "pct_rural",
+                                        "pct_communitymanaged",
+                                        "pct_governmentmanaged",
+                                        "pct_othermanaged")
+
+head(cluster_vars)
+
+```
+
+Next, we'll set the shape name as the row names.
+
+```{r}
+row.names(cluster_vars) <- cluster_vars$shapeName
+head(cluster_vars)
+
+```
+
+Next, we'll delete the shape name column.
+
+```{r}
+nga_wp_hca <- select(cluster_vars, c(2:8))
+head(nga_wp_hca)
+
+```
+
+### Data standardization
+
+Sometimes we'd standardize the data using z transformation or min-max transformation because the variables are not in the same range. For example, if we have variables like likert scales having values from 1 to 10 and also variables like income having values from a few hundreds to thoursands, then we should transform the values into a similar range to avoid biased results.
+
+In our exercise, since we have computed the percentage of all the attributes and all of them are within the range from 0 to 1, it isn't necessary for us to perform standardization on the variables. We'll use the computed variables to perform clustering analysis.
+
+### Computing proximity matrix
+
+Next, we'll calculate the proximity matrix using euclidean distance. However, we noticed that there are some rows with NA in the clustering data frame. We'll remove the rows with NA first.
+
+```{r}
+nga_wp_hca_com <- nga_wp_hca[complete.cases(nga_wp_hca),]
+
+```
+
+```{r}
+proxmat <- dist(nga_wp_hca_com, method = 'euclidean')
+proxmat
+
+```
+
+### Computing hierarchical clustering
+
+Next, we'll perform hierarchical clustering analysis using ward.D method.
+
+```{r}
+hclust_ward <- hclust(proxmat, method = 'ward.D')
+
+```
+
+We could plot the dendrogram of the clusters.
+
+```{r}
+plot(hclust_ward, cex = 0.6)
+
+```
+
+### Selecting the optimal clustering algorithm
+
+Next, since there are multiple methods available in hierarchical clustering, we'll compute the agglomerative coefficient to determine which one is the best for our data. Agglomerative coefficient is used to measure the amount of clustering structure found in the data. Values closer to 1 suggest strong clustering structure.
+
+```{r}
+m <- c( "average", "single", "complete", "ward")
+names(m) <- c( "average", "single", "complete", "ward")
+
+ac <- function(x) {
+  agnes(nga_wp_hca_com, method = x)$ac
+}
+
+map_dbl(m, ac)
+
+```
+
+The output above reveals that Ward's method has the highest agglomerative coefficient, which indicates that it's the best method for this data set. Therefore, we'll use Ward's method in the subsequent analysis.
+
+### Determining Optimal Clusters
+
+Next, we'll use gap statistic method to determine the optimal number of clusters.
+
+The [**gap statistic**](http://www.web.stanford.edu/~hastie/Papers/gap.pdf) compares the total within intra-cluster variation for different values of k with their expected values under null reference distribution of the data. The estimate of the optimal clusters will be value that maximize the gap statistic (i.e., that yields the largest gap statistic). This means that the clustering structure is far away from the random uniform distribution of points.
+
+```{r}
+set.seed(12345)
+gap_stat <- clusGap(nga_wp_hca_com, 
+                    FUN = hcut, 
+                    nstart = 25, 
+                    K.max = 10, 
+                    B = 50)
+# Print the result
+print(gap_stat, method = "firstmax")
+
+```
+
+Let's plot the gap statistic against the clusters for easier analysis.
+
+```{r}
+fviz_gap_stat(gap_stat)
+
+```
+
+The plot above shows that the recommended number of clusters is 8. Although the gap statistic at 9 clusters is the highest, there isn't a significant increment from 8 clusters. Therefore, we'll use 8 clusters as suggested.
+
+### Interpreting the dendrogram
+
+Now, we'll highlight the 8 clusters in the dendrogram.
+
+```{r}
+plot(hclust_ward, cex = 0.6)
+rect.hclust(hclust_ward, 
+            k = 8, 
+            border = 2:5)
+
+```
+
+### Visually-driven hierarchical clustering analysis
+
+It's not so easy to understand the characteristics of the clusters from the dendrogram. We'll then build an interactive cluster heatmap to understand more about the clusters.
+
+**Transforming the data frame into a matrix**
+
+In order to plot a heatmap, we need to convert the data frame to a matrix.
+
+```{r}
+nga_wp_hca_mat <- data.matrix(nga_wp_hca_com)
+
+```
+
+**Plotting interactive cluster heatmap**
+
+```{r}
+heatmaply(normalize(nga_wp_hca_mat),
+          Colv=NA,
+          dist_method = "euclidean",
+          hclust_method = "ward.D",
+          seriate = "OLO",
+          colors = Blues,
+          k_row = 8,
+          margins = c(NA,200,60,NA),
+          fontsize_row = 4,
+          fontsize_col = 5,
+          main="Geographic Segmentation of Nigeria by Water Point Indicators",
+          xlab = "Water Point Indicators",
+          ylab = "Regions in Nigeria"
+          )
+
+```
+
+### Mapping the clusters formed
+
+Next, we'll join the clusters' information with the original simple feature object to plot the clusters on the choropleth map.
+
+```{r}
+groups <- as.factor(cutree(hclust_ward, k=8))
+
+```
+
+```{r}
+nga_wp_hca_cluster <- cbind(cbind(rownames(nga_wp_hca_com), data.frame(nga_wp_hca_com, row.names = NULL)), as.matrix(groups)) %>%
+  select(c(1,9)) %>%
+  rename(`shapeName` = `rownames(nga_wp_hca_com)`,
+         `CLUSTER` = `as.matrix(groups)`)
+
+head(nga_wp_hca_cluster)
+  
+```
+
+```{r}
+nga_wp_cluster <- left_join(nga_wp, nga_wp_hca_cluster, by = "shapeName")
+
+head(nga_wp_cluster)
+
+```
+
+```{r}
+qtm(nga_wp_cluster, "CLUSTER")
+
+```
+
+It's an interesting map, but the region in the clusters are scattered around which makes it challenging for interpretation.
+
+In the next section, we'll apply the spatially constrained clustering method to improve the clusters.
+
+## Spatially Constrained Clustering: SKATER approach 
+
+### Converting into SpatialPolygonsDataFrame
+
+First of all, we need to convert the simple feature data frame into SpatialPolygonsDataFrame because SKATER function only support sp objects such as SpatialPolygonDataFrame.
+
+```{r}
+nga_wp_sp <- as_Spatial(nga_wp)
+
+```
+
+### Computing neighbour list
+
+Next, we compute the neighbour list from the polygon list.
+
+```{r}
+nga_wp.nb <- poly2nb(nga_wp_sp)
+summary(nga_wp.nb)
+
+```
+
+The summary report above reveals that the average neighbours for a region in Nigeria is 5.74. There is one region not linked to any neighbours, and there is one region with 14 neighbours.
+
+We'll need to remove the polygon with no links in order to carry on with the edge cost calculation.
+
+```{r}
+nga_wp.nb.sub <- subset(nga_wp.nb, subset=card(nga_wp.nb) > 0)
+nga_wp_sp.sub <- subset(nga_wp_sp, subset=card(nga_wp.nb) > 0)
+nga_wp_hca.sub <- subset(nga_wp_hca, subset=card(nga_wp.nb) > 0)
+nga_wp_hca.sub[is.na(nga_wp_hca.sub)] = 0
+nga_wp_cluster.sub <- subset(nga_wp_cluster, subset=card(nga_wp.nb) > 0)
+
+```
+
+We could plot the neighbour list on the geoboundaries.
+
+```{r fig.height=10, fig.width=10}
+plot(nga_wp_sp.sub, 
+     border=grey(.5))
+plot(nga_wp.nb.sub, 
+     coordinates(nga_wp_sp.sub), 
+     col="blue", 
+     add=TRUE)
+
+```
+
+### **Calculating edge costs**
+
+Next, we'll calculate the cost of each edge which is the distance between its nodes.
+
+```{r}
+lcosts <- nbcosts(nga_wp.nb.sub, nga_wp_hca.sub)
+
+```
+
+Now we have calculated the pairwise dissimilarity between it's values on the water point variables and the values for the neighbouring observations. In other words, we have constructed the weights for a spatial weights matrix.
+
+Next, we'll convert the nerighbour list to a list weights object by specifying lcosts as the weights.
+
+```{r}
+nga_wp.sub.w <- nb2listw(nga_wp.nb.sub, 
+                   lcosts, 
+                   style="B",
+                   zero.policy = TRUE)
+summary(nga_wp.sub.w)
+
+```
+
+### Computing minimum spanning tree
+
+Next, we'll calculate the minimum spanning tree.
+
+```{r}
+nga_wp.sub.mst <- mstree(nga_wp.sub.w)
+
+class(nga_wp.sub.mst)
+
+```
+
+```{r}
+dim(nga_wp.sub.mst)
+
+```
+
+The dimension of 772 x 3 is correct because the minimum spanning tree consists of n-1 edges (links) in order to traverse all the nodes
+
+```{r}
+head(nga_wp.sub.mst)
+
+```
+
+Next, let's plot the MST on the geoboundaries.
+
+```{r fig.height=10, fig.width=10}
+plot(nga_wp_sp.sub, border=gray(.5))
+plot.mst(nga_wp.sub.mst, 
+         coordinates(nga_wp_sp.sub), 
+         col="blue", 
+         cex.lab=0.7, 
+         cex.circles=0.005, 
+         add=TRUE)
+
+```
+
+### Computing spatially constrained clusters using SKATER method
+
+We'll now compute the spatially constrained cluster using 8 clusters.
+
+```{r}
+clust8 <- spdep::skater(edges = nga_wp.sub.mst[,1:2], 
+                 data = nga_wp_hca.sub, 
+                 method = "euclidean", 
+                 ncuts = 7)
+
+```
+
+Note that the number of cuts is one less than the desired number of clusters.
+
+```{r}
+str(clust8)
+
+```
+
+The groups vector in the SKATER output contains the cluster group each observation belongs to. We could check the cluster groups using the code below.
+
+```{r}
+ccs8 <- clust8$groups
+ccs8
+
+```
+
+We can find out the cluster size for each cluster.
+
+```{r}
+table(ccs8)
+
+```
+
+Cluster 6 has the least observations of 20, and cluster 8 is the largest with 284 observations.
+
+We then plot the pruned tree that shows the 8 clusters on top of the geoboundaries.
+
+```{r fig.height=20, fig.width=20}
+plot(nga_wp_sp.sub, border=gray(.5))
+plot(clust8, 
+     coordinates(nga_wp_sp.sub), 
+     cex.lab=.7,
+     groups.colors=c("red","green","blue", "brown", "pink", "black", "orange", "yellow"),
+     cex.circles=0.005, 
+     add=TRUE)
+
+```
+
+### Visualizing the clusters in choropleth map
+
+We can now plot the newly derived clusters from SKATER method.
+
+```{r fig.height=10, fig.width=10}
+groups_mat <- as.matrix(clust8$groups)
+nga_wp_spatialcluster.sub <- cbind(nga_wp_cluster.sub, as.factor(groups_mat)) %>%
+  rename(`SP_CLUSTER`=`as.factor.groups_mat.`)
+
+qtm(nga_wp_spatialcluster.sub, "SP_CLUSTER")
+
+```
+
+For easy comparison, we could plot the hierarchical clustering map together with the spatially constrained clustering map.
+
+```{r fig.height=5, fig.width=10}
+hclust.map <- qtm(nga_wp_spatialcluster.sub,
+                  "CLUSTER") + 
+  tm_borders(alpha = 0.5) 
+
+shclust.map <- qtm(nga_wp_spatialcluster.sub,
+                   "SP_CLUSTER") + 
+  tm_borders(alpha = 0.5) 
+
+tmap_arrange(hclust.map, shclust.map,
+             asp=0, ncol=2)
+
+```
+
+The plots above shows that the regions in the clusters from spatially constrained clustering method are not as scattered as that from the hierarchical clustering analysis. This would be more helpful for the decision makers to draw geospatial conclusions.
+
+## Visual Interpretation of Clusters
+
+### Summary statistics of the clusters
+
+```{r}
+nga_wp_spatialcluster.sub %>% 
+  st_set_geometry(NULL) %>%
+  group_by(CLUSTER) %>%
+  summarise(mean_functional = mean(pct_functional),
+            mean_nonfunctional = mean(`pct_non.functional`),
+            mean_handpump = mean(pct_handpump),
+            mean_rural = mean(pct_rural),
+            mean_communitymanaged = mean(pct_communitymanaged),
+            mean_governmentmanaged = mean(pct_governmentmanaged),
+            mean_othermanaged = mean(pct_othermanaged))
+
+```
+
+### Multivariate Visualization
+
+```{r}
+ggparcoord(data = nga_wp_spatialcluster.sub, 
+           columns = c(17:19,23:26), 
+           scale = "globalminmax",
+           alphaLines = 0.2,
+           boxplot = TRUE, 
+           title = "Multiple Parallel Coordinates Plots of Water Points by Cluster") +
+  facet_grid(~ CLUSTER) + 
+  theme(axis.text.x = element_text(angle = 90))
+
+```
+
+We could observe there are some distinctive difference among the clusters from the plot above:
+
+**Cluster 1:** most regions are urban area having functional water points with mechanized pumps. Nevertheless, a few region have high percentage of non-functional water points.
+
+**Cluster 2:** most regions are in rural area having functional water points with hand pumps.
+
+**Cluster 3:** most regions are in rural area having non-functional water points with mechanized pumps.
+
+**Cluster 4:** most regions are in rural area having non-functional water points with hand pumps.
+
+**Cluster 5:** most regions are in rural area having a mix of functional and non-functional water points using mechanized pumps.
+
+**Cluster 6:** most regions are in urban area having a mix of functional and non-functional water points using hand pumps.
+
+**Cluster 7:** most regions are in rural area having functional water points managed by government. These water points are also using mechanized pumps.
+
+**Cluster 8:** most of the regions are in rural area having functional water points managed by community. Those water points are also using mechanized pumps.
+
+## Conclusion
+
+We have applied both hierarchical clustering and spatially constrained clustering methods on the Nigeria water points data set. Spatially constrained clustering method indeed provide better clusters when geospatial information need to be considered for the analysis. It provides better interpretation, and the constrained clusters are more insightful for the business decision makers to draw strategic conclusions.
+
+### Future Work
+
+-   Methodology: we applied SKATER method to perform spatially constrained clustering analysis in this exercise. There are also other methods like ClustGeo method. For future work, we could compare different methods to assess which one gives better clusters with more distinctive characteristics.
+
+-   Attribute dimension: in this exercise, we evaluated the functional status of the water points, their water sources, the technology used, the area type, user capacity and their management institutes. For future work, we could extend the analysis to include more attributes such as the local population, the age of the water points and the distance to road / city.
+
+**Thank you!**
+
