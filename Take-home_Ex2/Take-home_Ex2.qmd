@@ -140,33 +140,20 @@ tm_shape(nga_new) +
 
 By referencing to cirad Aware webpage for **Nigeria administrative boundaries (level 2)** ([link](https://aware.cirad.fr/layers/geonode:nigeria_adminboundaries_adm2_20170222_32631)) which is an interactive webpage to view geospatial data, we are able to identify the correct names for the polygons.
 
-+----------------------------+--------------------+---------------------+
 | shapeID                    | Original shapeName | Correct shapeName   |
-+============================+====================+=====================+
+|----------------------------|--------------------|---------------------|
 | NGA-ADM2-72505758B95534398 | Bassa              | Bassa (Kogi)        |
-+----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B52690633 | Bassa              | Bassa (Plateau)     |
-+----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B26581542 | Ifelodun           | Ifelodun (Kwara)    |
-+----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B18326272 | Ifelodun           | Ifelodun (Osun)     |
-+----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B75034141 | Irepodun           | Irepodun (Kwara)    |
-+----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B79178637 | Irepodun           | Irepodun (Osun)     |
-+----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B6786568  | Nasarawa           | Nasarawa (Kano)     |
-+----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B67188591 | Nasarawa           | Nasarawa (Nasarawa) |
-+----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B7318634  | Obi                | Obi (Benue)         |
-+----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B3073896  | Obi                | Obi (Nasarawa)      |
-+----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B6675111  | Surulere           | Surulere (Lagos)    |
-+----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B31597260 | Surulere           | Surulere (Oyo)      |
-+----------------------------+--------------------+---------------------+
 
 : Now, let's rectify the shape names for the 6 pairs of polygons with duplicated names.
 
@@ -1067,7 +1054,7 @@ It's an interesting map, but the region in the clusters are scattered around whi
 
 In the next section, we'll apply the spatially constrained clustering method to improve the clusters.
 
-## Spatially Constrained Clustering: SKATER approach 
+## Spatially Constrained Clustering: SKATER approach
 
 ### Converting into SpatialPolygonsDataFrame
 
@@ -1312,4 +1299,3 @@ We have applied both hierarchical clustering and spatially constrained clusterin
 -   Attribute dimension: in this exercise, we evaluated the functional status of the water points, their water sources, the technology used, the area type, user capacity and their management institutes. For future work, we could extend the analysis to include more attributes such as the local population, the age of the water points and the distance to road / city.
 
 **Thank you!**
-

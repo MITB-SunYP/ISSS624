@@ -1,0 +1,268 @@
+---
+title: "In-class Exercise 5"
+editor: visual
+---
+
+## Overview
+
+In this hands-on exercise, I learned how to build [hedonic pricing](https://www.investopedia.com/terms/h/hedonicpricing.asp) models by using GWR methods. The dependent variable is the resale prices of condominium in 2015. The independent variables are divided into either structural and locational.
+
+## Getting Started
+
+Firstly, we need to install the required R packages.
+
+-   **olsrr:** building ordinary least squares regression models
+
+-   **GWmodel:** building geographically weighted regression models
+
+-   **corrplot:** plotting the graph of the correlation matrix
+
+-   **sf**: importing, managing and processing geospatial data.
+
+-   **tmap**: plotting Thematic Maps.
+
+-   **tidyverse**: importing, wrangling and visualizing data. It consists of a family of R packages, including **readr**, **readxl**, **tidyr**, **dplyr** and **ggplot2**.
+
+```{r}
+pacman::p_load(sf, tidyverse, funModeling, blorr, corrplot, ggpubr, spdep, GWmodel, tmap, skimr, caret)
+
+```
+
+## Importing Required Data
+
+### Importing the analytical data table
+
+Let's import the analytical data table Osun.
+
+```{r}
+Osun <- read_rds("data/Osun.rds")
+Osun_wp_sf <- read_rds("data/Osun_wp_sf.rds")
+
+```
+
+Osun is a polygon feature data frame with 30 features and 5 fields.
+
+Osun_wp_sf contains the water point information in Osun state, and it has 4760 observations and 75 variables.
+
+In this exercise, we'll calibrate a logistic regression model using status as the response variable.
+
+Next, let's check the split of the response variable.
+
+```{r}
+Osun_wp_sf %>% 
+  freq(input = 'status')
+
+```
+
+The plot above shows that the response variable is quite balanced.
+
+Let's plot the status distribution on a choropleth map.
+
+## Exploratory Data Analysis (EDA)
+
+Next, we'll check the summary statistics of the variables in the water point data frame.
+
+```{r}
+Osun_wp_sf %>% 
+  skim()
+
+```
+
+The summary report above reveals that there are missing values in some of the variables. Since logistic regression requires the variables to be complete (i.e., no missing values), we'll not consider the variables with exessive missing values in calibrating the model in this exercise.
+
+However, there are a few variables with little missing values. In order not to lose much information, we'll keep them but exclude the observations with the missing values. In addition, we'll convert usage_capacity from numerical type to factor type because it only has two values (i.e., 300 and 1000).
+
+```{r}
+Osun_wp_sf_clean <- Osun_wp_sf %>%
+  filter_at(vars(status,
+                 distance_to_primary_road,
+                 distance_to_secondary_road,
+                 distance_to_tertiary_road,
+                 distance_to_city,
+                 distance_to_town,
+                 water_point_population,
+                 local_population_1km,
+                 usage_capacity,
+                 is_urban,
+                 water_source_clean),
+            all_vars(!is.na(.))) %>%
+  mutate(usage_capacity = as.factor(usage_capacity))
+
+```
+
+## Correlation Analysis
+
+Before performing the correlation analysis, we'll extract the interested variables into a new data frame.
+
+```{r}
+Osun_wp <- Osun_wp_sf_clean %>%
+  select(c(7, 35:39, 42:43, 46:47, 57)) %>%
+  st_set_geometry(NULL)
+
+```
+
+Next, we'll construct the correlation matrix.
+
+```{r fig.height=10, fig.width=10}
+cluster_vars.cor = cor(
+  Osun_wp[, 2:8]
+)
+
+corrplot.mixed(cluster_vars.cor,
+               lower = "ellipse",
+               upper = "number",
+               tl.pos = "lt",
+               diag = "l",
+               tl.col = "black")
+
+```
+
+Great! We don't have variables that are strongly correlated. We could now proceed to calibrate our model.
+
+## Logistic Regression Model
+
+Now, we'll build a logistic regression model.
+
+```{r}
+model <- glm(status ~ distance_to_primary_road +
+                 distance_to_secondary_road +
+                 distance_to_tertiary_road +
+                 distance_to_city +
+                 distance_to_town +
+                 water_point_population +
+                 local_population_1km +
+                 usage_capacity +
+                 is_urban +
+                 water_source_clean,
+             data = Osun_wp_sf_clean,
+             family = binomial(link = "logit"))
+
+```
+
+Instead of using the default R model output, we'll another function to generate a better model report.
+
+```{r}
+blr_regress(model)
+
+```
+
+The model report above reveals that there are varaibles having p-values less than 0.05. Hence, we should exclude them in the model.
+
+Variables to be excluded:
+
+-   distance_to_primary_road
+-   distance_to_secondary_road
+
+Next, we'll construct a confusion matrix using 0.5 as the cutoff probability.
+
+```{r}
+blr_confusion_matrix(model, cutoff = 0.5)
+
+```
+
+The summary report above reveals that the model has an accuracy of 67.39%.
+
+## Geographically Weighted Regression Model
+
+First of all, we need to convert the polygon feature data frame into a SpatialPointsDataFrame in order to build a GWR model.
+
+```{r}
+Osun_wp_sp <- Osun_wp_sf_clean %>%
+  select(c(status,
+           distance_to_primary_road,
+           distance_to_secondary_road,
+           distance_to_tertiary_road,
+           distance_to_city,
+           distance_to_town,
+           water_point_population,
+           local_population_1km,
+           usage_capacity,
+           is_urban,
+           water_source_clean)) %>%
+  as_Spatial()
+
+Osun_wp_sp
+
+```
+
+Next, we'll calculate the distance matrix using fixed distance method.
+
+```{r}
+bw.fixed <- bw.ggwr(status ~ distance_to_primary_road +
+                 distance_to_secondary_road +
+                 distance_to_tertiary_road +
+                 distance_to_city +
+                 distance_to_town +
+                 water_point_population +
+                 local_population_1km +
+                 usage_capacity +
+                 is_urban +
+                 water_source_clean,
+                 data = Osun_wp_sp,
+                 family = "binomial",
+                 approach = "AIC",
+                 kernel = "gaussian",
+                 adaptive = FALSE,
+                 longlat = FALSE)
+
+```
+
+The longlat argument is set to FALSE because we have already converted the longitude and latiutde are already in the projected coordinate system.
+
+```{r}
+bw.fixed
+
+```
+
+The fixed band width is xxx meters. The unit is meter because our projected coordinate system is in meters.
+
+Next, we can calibrate the GWR model with the selected band width.
+
+```{r}
+gwlr.fixed <- ggwr.basic(status ~ distance_to_primary_road +
+                                  distance_to_secondary_road +
+                                  distance_to_tertiary_road +
+                                  distance_to_city +
+                                  distance_to_town +
+                                  water_point_population +
+                                  local_population_1km +
+                                  usage_capacity +
+                                  is_urban +
+                                  water_source_clean,
+                                  data = Osun_wp_sp,
+                 bw = bw.fixed,
+                 family = "binomial",
+                 kernel = "gaussian",
+                 adaptive = FALSE,
+                 longlat = FALSE)
+
+```
+
+```{r}
+gwlr.fixed
+
+```
+
+The model report above shows that the GW model has a significantly lower AIC compared to the normal logistic regression model.
+
+Next, we'll compute the prediction of functional and non-functional from the estimated probability using 0.5 as the cutoff point.
+
+```{r}
+gwr.fixed <- as.data.frame(gwlr.fixed$SDF)
+
+```
+
+```{r}
+gwr.fixed <- gwr.fixed %>%
+  mutate(most = ifelse(
+    gwr.fixed$yhat >= 0.5, T, F
+  ))
+
+```
+
+```{r}
+gwr.fixed$y <- as.factor(gwr.fixed$y)
+gwr.fixed$most <- as.factor(gwr.fixed$most)
+#CM <- confusionMatrix(data = gwr.fixed$most, reference = gwr.fixed$y)
+
+```
