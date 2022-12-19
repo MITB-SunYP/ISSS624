@@ -15,11 +15,11 @@ Firstly, we need to install the required R packages.
 
 -   **spdep**: computing spatial weights and spatially lagged variables.
 
--   **tmap**: plotting Thematic Maps
+-   **tmap**: plotting Thematic Maps.
 
 -   **tidyverse**: importing, wrangling and visualizing data. It consists of a family of R packages, including **readr**, **readxl**, **tidyr**, **dplyr** and **ggplot2**.
 
--   **funModeling**: a tool box for data preparation and exploratory data analysis
+-   **funModeling**: a tool box for data preparation and exploratory data analysis.
 
 ```{r}
 pacman::p_load(sf, tidyverse, tmap, spdep, funModeling)

@@ -13,8 +13,8 @@ In this take-home exercise, we are going to analyze the water point related data
 
 ## Problem Statement
 
--   Apply global measures of spatial association techniques to study if the Not Functional water points are evenly distributed across Nigeria
--   Apply local measures of spatial association techniques to study if there are any area having more Not Functional water points
+-   Apply global measures of spatial association techniques to study if the Not Functional water points are evenly distributed across Nigeria.
+-   Apply local measures of spatial association techniques to study if there are any area having more Not Functional water points.
 
 ## Getting Started
 

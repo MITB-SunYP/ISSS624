@@ -52,16 +52,16 @@ First of all, let's load the required R packages into R:
 -   **spdep**: computing spatial weights and spatially lagged variables.
 -   **tmap**: plotting Thematic Maps.
 -   **tidyverse**: importing, wrangling and visualizing data. It consists of a family of R packages, including **readr**, **readxl**, **tidyr**, **dplyr** and **ggplot2**.
--   **rgdal**: handling geospatial data
--   **ggpubr:** facilitating **ggplot2** to make more visually appealing charts
--   **cluster:** performing cluster analysis
--   **factoextra:** extracting and visualizing the output of multivariate data analyses
--   **NbClust:** determining the best number of clusters in a data set
--   **heatmaply:** creating interactive cluster heatmaps
--   **corrplot:** plotting correlation matrix
--   **psych:** handling multivariate analysis
--   **funModeling**: a tool box for data preparation and exploratory data analysis
--   **GGally:** extension of ggplot2 to reduce the complexity of combining geometric objects with transformed data
+-   **rgdal**: handling geospatial data.
+-   **ggpubr:** facilitating **ggplot2** to make more visually appealing charts.
+-   **cluster:** performing cluster analysis.
+-   **factoextra:** extracting and visualizing the output of multivariate data analyses.
+-   **NbClust:** determining the best number of clusters in a data set.
+-   **heatmaply:** creating interactive cluster heatmaps.
+-   **corrplot:** plotting correlation matrix.
+-   **psych:** handling multivariate analysis.
+-   **funModeling**: a tool box for data preparation and exploratory data analysis.
+-   **GGally:** extension of ggplot2 to reduce the complexity of combining geometric objects with transformed data.
 
 ```{r}
 pacman::p_load(sf, spdep, tmap, tidyverse, rgdal, ggpubr, cluster, factoextra, NbClust, heatmaply, corrplot, psych, funModeling, GGally)
@@ -140,20 +140,33 @@ tm_shape(nga_new) +
 
 By referencing to cirad Aware webpage for **Nigeria administrative boundaries (level 2)** ([link](https://aware.cirad.fr/layers/geonode:nigeria_adminboundaries_adm2_20170222_32631)) which is an interactive webpage to view geospatial data, we are able to identify the correct names for the polygons.
 
++----------------------------+--------------------+---------------------+
 | shapeID                    | Original shapeName | Correct shapeName   |
-|----------------------------|--------------------|---------------------|
++============================+====================+=====================+
 | NGA-ADM2-72505758B95534398 | Bassa              | Bassa (Kogi)        |
++----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B52690633 | Bassa              | Bassa (Plateau)     |
++----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B26581542 | Ifelodun           | Ifelodun (Kwara)    |
++----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B18326272 | Ifelodun           | Ifelodun (Osun)     |
++----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B75034141 | Irepodun           | Irepodun (Kwara)    |
++----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B79178637 | Irepodun           | Irepodun (Osun)     |
++----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B6786568  | Nasarawa           | Nasarawa (Kano)     |
++----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B67188591 | Nasarawa           | Nasarawa (Nasarawa) |
++----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B7318634  | Obi                | Obi (Benue)         |
++----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B3073896  | Obi                | Obi (Nasarawa)      |
++----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B6675111  | Surulere           | Surulere (Lagos)    |
++----------------------------+--------------------+---------------------+
 | NGA-ADM2-72505758B31597260 | Surulere           | Surulere (Oyo)      |
++----------------------------+--------------------+---------------------+
 
 : Now, let's rectify the shape names for the 6 pairs of polygons with duplicated names.
 

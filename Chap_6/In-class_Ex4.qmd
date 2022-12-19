@@ -11,11 +11,11 @@ In this hands-on exercise, I learned how to build [hedonic pricing](https://www.
 
 Firstly, we need to install the required R packages.
 
--   **olsrr:** building ordinary least squares regression models
+-   **olsrr:** building ordinary least squares regression models.
 
--   **GWmodel:** building geographically weighted regression models
+-   **GWmodel:** building geographically weighted regression models.
 
--   **corrplot:** plotting the graph of the correlation matrix
+-   **corrplot:** plotting the graph of the correlation matrix.
 
 -   **sf**: importing, managing and processing geospatial data.
 

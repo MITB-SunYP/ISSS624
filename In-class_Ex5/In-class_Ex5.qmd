@@ -1,27 +1,27 @@
 ---
-title: "In-class Exercise 5"
+title: "In-class Exercise 5: Geograpgically Weighted Logistic Regression (GWLR) and Application"
 editor: visual
 ---
 
 ## Overview
 
-In this hands-on exercise, I learned how to build [hedonic pricing](https://www.investopedia.com/terms/h/hedonicpricing.asp) models by using GWR methods. The dependent variable is the resale prices of condominium in 2015. The independent variables are divided into either structural and locational.
+In this hands-on exercise, I learned how to build logistic regression models specially designed for geographical data. I'd also compare the differences between a normal logistic regression model and a geographically weighted logistic regression model.
 
 ## Getting Started
 
 Firstly, we need to install the required R packages.
 
--   **olsrr:** building ordinary least squares regression models
-
--   **GWmodel:** building geographically weighted regression models
-
--   **corrplot:** plotting the graph of the correlation matrix
-
 -   **sf**: importing, managing and processing geospatial data.
-
--   **tmap**: plotting Thematic Maps.
-
 -   **tidyverse**: importing, wrangling and visualizing data. It consists of a family of R packages, including **readr**, **readxl**, **tidyr**, **dplyr** and **ggplot2**.
+-   **funModeling**: a tool box for data preparation and exploratory data analysis
+-   **blorr**: building and validating binary logistic regression models
+-   **corrplot:** plotting correlation matrix
+-   **ggpubr:** facilitating **ggplot2** to make more visually appealing charts
+-   **spdep**: computing spatial weights and spatially lagged variables.
+-   **GWmodel**: building geographically weighted models
+-   **tmap**: plotting Thematic Maps.
+-   **skimr**: providing summary statistics about variables in data frames, tibbles, data tables and vectors
+-   **caret**: containing a set of functions that attempt to streamline the process for creating predictive models
 
 ```{r}
 pacman::p_load(sf, tidyverse, funModeling, blorr, corrplot, ggpubr, spdep, GWmodel, tmap, skimr, caret)
@@ -54,13 +54,27 @@ Osun_wp_sf %>%
 
 ```
 
-The plot above shows that the response variable is quite balanced.
+The plot above shows that the response variable is quite balanced. 55.5% of the water points are functional, and 44.5% of the water points are non-functional.
 
-Let's plot the status distribution on a choropleth map.
+Next, let's plot the status distribution on a choropleth map.
+
+```{r}
+tmap_mode("view")
+
+tm_shape(Osun) +
+  tm_polygons(alpha = 0.4) +
+tm_shape(Osun_wp_sf) +
+  tm_dots(col = "status",
+          alpha = 0.6) +
+  tm_view(set.zoom.limits = c(9,12))
+
+```
+
+The map above shows that the functional and non-functional water points are quite scatteredly distributed, although there seems to have some clusters of non-functional water points in the central and northern part of Osun state.
 
 ## Exploratory Data Analysis (EDA)
 
-Next, we'll check the summary statistics of the variables in the water point data frame.
+Now, we'll check the summary statistics of the variables in the water point data frame.
 
 ```{r}
 Osun_wp_sf %>% 
@@ -68,9 +82,9 @@ Osun_wp_sf %>%
 
 ```
 
-The summary report above reveals that there are missing values in some of the variables. Since logistic regression requires the variables to be complete (i.e., no missing values), we'll not consider the variables with exessive missing values in calibrating the model in this exercise.
+The summary report above reveals that there are missing values in some of the variables. Since logistic regression requires the variables to be complete (i.e., no missing values), we'll not consider the variables with excessive missing values in calibrating the model in this exercise.
 
-However, there are a few variables with little missing values. In order not to lose much information, we'll keep them but exclude the observations with the missing values. In addition, we'll convert usage_capacity from numerical type to factor type because it only has two values (i.e., 300 and 1000).
+However, there are a few variables with only a few missing values. In order not to lose much information, we'll keep them but exclude the observations with the missing values. In addition, we'll convert usage_capacity from numerical type to factor type because it only has two values (i.e., 300 and 1000).
 
 ```{r}
 Osun_wp_sf_clean <- Osun_wp_sf %>%
@@ -139,7 +153,7 @@ model <- glm(status ~ distance_to_primary_road +
 
 ```
 
-Instead of using the default R model output, we'll another function to generate a better model report.
+Instead of using the default R model output, we'll use another function to generate a better model report.
 
 ```{r}
 blr_regress(model)
@@ -153,16 +167,39 @@ Variables to be excluded:
 -   distance_to_primary_road
 -   distance_to_secondary_road
 
-Next, we'll construct a confusion matrix using 0.5 as the cutoff probability.
-
 ```{r}
-blr_confusion_matrix(model, cutoff = 0.5)
+model2 <- glm(status ~ distance_to_tertiary_road +
+                 distance_to_city +
+                 distance_to_town +
+                 water_point_population +
+                 local_population_1km +
+                 usage_capacity +
+                 is_urban +
+                 water_source_clean,
+             data = Osun_wp_sf_clean,
+             family = binomial(link = "logit"))
 
 ```
 
-The summary report above reveals that the model has an accuracy of 67.39%.
+```{r}
+blr_regress(model2)
+
+```
+
+The model report above reveals that all the independent variables are significant now.
+
+Next, we'll construct a confusion matrix using 0.5 as the cutoff probability.
+
+```{r}
+blr_confusion_matrix(model2, cutoff = 0.5)
+
+```
+
+The summary report above reveals that the model has an accuracy of 67.26%. In addition, the model has a sensitivity score of 71.88%, and a specificity score of 61.49%.
 
 ## Geographically Weighted Regression Model
+
+The logistic regression model calibrated in the previous section doesn't take geospatial information into consideration. Now, let's compare it with a geographically weighted regression model.
 
 First of all, we need to convert the polygon feature data frame into a SpatialPointsDataFrame in order to build a GWR model.
 
@@ -207,14 +244,14 @@ bw.fixed <- bw.ggwr(status ~ distance_to_primary_road +
 
 ```
 
-The longlat argument is set to FALSE because we have already converted the longitude and latiutde are already in the projected coordinate system.
+The longlat argument is set to FALSE because the longitude and latitude are already in the projected coordinate system.
 
 ```{r}
 bw.fixed
 
 ```
 
-The fixed band width is xxx meters. The unit is meter because our projected coordinate system is in meters.
+The best fixed band width is 2599.672 meters. The unit is meter because our projected coordinate system is in meters.
 
 Next, we can calibrate the GWR model with the selected band width.
 
@@ -243,12 +280,39 @@ gwlr.fixed
 
 ```
 
-The model report above shows that the GW model has a significantly lower AIC compared to the normal logistic regression model.
-
-Next, we'll compute the prediction of functional and non-functional from the estimated probability using 0.5 as the cutoff point.
+The model report has two portions. The first portion is the output for the conventional logistic regression, which is the same as the one we calibrated in the previous section. We observed that the same two variables are insignificant here, and we shall remove them. The second portion is for the geographically weighted regression model.
 
 ```{r}
-gwr.fixed <- as.data.frame(gwlr.fixed$SDF)
+gwlr.fixed2 <- ggwr.basic(status ~ distance_to_tertiary_road +
+                                  distance_to_city +
+                                  distance_to_town +
+                                  water_point_population +
+                                  local_population_1km +
+                                  usage_capacity +
+                                  is_urban +
+                                  water_source_clean,
+                                  data = Osun_wp_sp,
+                 bw = bw.fixed,
+                 family = "binomial",
+                 kernel = "gaussian",
+                 adaptive = FALSE,
+                 longlat = FALSE)
+
+```
+
+```{r}
+gwlr.fixed2
+
+```
+
+The first portion of the model report shows that all the independent variables are significant now.
+
+In addition, it also shows that the GW model has a significantly lower AIC compared to the normal logistic regression model which indicates that the GW model is better than the conventional logistic regression model.
+
+Next, we'll compute the prediction of functional and non-functional from the estimated probability using 0.5 as the cutoff point. By doing so, we'll be able to construct the confusion matrix to compare the accuracy.
+
+```{r}
+gwr.fixed <- as.data.frame(gwlr.fixed2$SDF)
 
 ```
 
@@ -263,6 +327,70 @@ gwr.fixed <- gwr.fixed %>%
 ```{r}
 gwr.fixed$y <- as.factor(gwr.fixed$y)
 gwr.fixed$most <- as.factor(gwr.fixed$most)
-#CM <- confusionMatrix(data = gwr.fixed$most, reference = gwr.fixed$y)
+CM <- confusionMatrix(data = gwr.fixed$most, reference = gwr.fixed$y)
+CM
+```
+
+The summary above reveals that the geographically weighted regression model has an accuracy of 86.88%, which is significantly higher than that of the conventional logistic regression model.
+
+## Model Assessment
+
+Next, we'll plot the prediction results on the map to assess the geographically weighted models.
+
+```{r}
+Osun_wp_sf_selected <- Osun_wp_sf_clean %>%
+  select(c(ADM2_EN, ADM2_PCODE,
+           ADM1_EN, ADM1_PCODE,
+           status))
+
+```
+
+```{r}
+gwr_sf.fixed <- cbind(Osun_wp_sf_selected, gwr.fixed)
+
+```
+
+### Visualizing coefficient estimates
+
+Next, we'll plot the coefficient estimates on the map.
+
+```{r}
+tmap_mode("view")
+
+prob_T <- tm_shape(Osun) +
+  tm_polygons(alpha = 0.1) +
+tm_shape(gwr_sf.fixed) +
+  tm_dots(col = "yhat",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(8,14))
+
+prob_T
+
+```
+
+We could also plot the standard errors and the t values of the independent variables to assess its reliability.
+
+```{r}
+tertiary_TV <- tm_shape(Osun) +
+  tm_polygons(alpha = 0.1) +
+tm_shape(gwr_sf.fixed) +
+  tm_dots(col = "distance_to_tertiary_road_TV",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(8,14))
+
+tertiary_SE <- tm_shape(Osun) +
+  tm_polygons(alpha = 0.1) +
+tm_shape(gwr_sf.fixed) +
+  tm_dots(col = "distance_to_tertiary_road_SE",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(8,14))
+
+tmap_arrange(tertiary_SE, tertiary_TV,
+             asp = 0,
+             ncol = 2,
+             sync = TRUE)
 
 ```

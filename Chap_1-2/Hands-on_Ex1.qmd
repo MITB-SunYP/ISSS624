@@ -32,7 +32,7 @@ mpsz <- st_read(dsn = "data/geospatial",
 
 ```
 
-*mpsz* is in **svy21** projected coordinates systems.
+*mpsz* is in **svy21** projected coordinates system.
 
 ### Importing polyline feature data
 

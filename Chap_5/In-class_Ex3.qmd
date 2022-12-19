@@ -19,23 +19,23 @@ Firstly, we need to install the required R packages.
 
 -   **tidyverse**: importing, wrangling and visualizing data. It consists of a family of R packages, including **readr**, **readxl**, **tidyr**, **dplyr** and **ggplot2**.
 
--   **rgdal**: handling geospatial data
+-   **rgdal**: handling geospatial data.
 
--   **ggpubr:** facilitating **ggplot2** to make more visually appealing charts
+-   **ggpubr:** facilitating **ggplot2** to make more visually appealing charts.
 
--   **cluster:** performing cluster analysis
+-   **cluster:** performing cluster analysis.
 
--   **factoextra:** extracting and visualizing the output of multivariate data analyses
+-   **factoextra:** extracting and visualizing the output of multivariate data analyses.
 
--   **NbClust:** determining the best number of clusters in a data set
+-   **NbClust:** determining the best number of clusters in a data set.
 
--   **heatmaply:** creating interactive cluster heatmaps
+-   **heatmaply:** creating interactive cluster heatmaps.
 
--   **corrplot:** plotting correlation matrix
+-   **corrplot:** plotting correlation matrix.
 
--   **psych:** handling multivariate analysis
+-   **psych:** handling multivariate analysis.
 
--   **ClustGeo:**
+-   **ClustGeo:** implements a Ward-like hierarchical clustering algorithm including spatial/geographical constraints.
 
 ```{r}
 pacman::p_load(sf, spdep, tmap, tidyverse, rgdal, ggpubr, cluster, factoextra, NbClust, heatmaply, corrplot, psych, ClustGeo)
